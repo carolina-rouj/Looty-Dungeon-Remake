@@ -4,7 +4,11 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour
 {
     public string levelFileName = "level2";
-    public GameObject floorPrefab;
+    public GameObject floorPrefab; // #
+    public GameObject floorDarkPrefab; // D
+    public GameObject floorBluePrefab; // B
+    public GameObject floorCarpetEnd; // c
+    public GameObject floorCarpetContinue; // C
 
     // Enemigos del nivel
     public GameObject slimePrefab;
@@ -22,7 +26,7 @@ public class LevelManager : MonoBehaviour
     // Singleton
     public static LevelManager Instance { get; private set; }
 
-    
+
     public float tamañoCasilla { get; private set; } = 1.0f;
     public float MaxBoundX { get; private set; }
     public float MinBoundZ { get; private set; }
@@ -129,14 +133,18 @@ public class LevelManager : MonoBehaviour
             string rowStr = levelData.grid[r];
             for (int c = 0; c < rowStr.Length; c++)
             {
-                if (rowStr[c] != '#') continue;
-
-                if (floorPrefab == null)
+                GameObject prefabToUse = rowStr[c] switch
                 {
-                    Debug.LogWarning("[LevelManager] floorPrefab no asignado.");
-                    return;
-                }
-                GameObject tile = Instantiate(floorPrefab, GridToWorld(c, r), Quaternion.identity, transform);
+                    '#' => floorPrefab,
+                    'D' => floorDarkPrefab,
+                    'B' => floorBluePrefab,
+                    'c' => floorCarpetEnd,
+                    'C' => floorCarpetContinue,
+                    _   => null
+                };
+                if (prefabToUse == null) continue;
+
+                GameObject tile = Instantiate(prefabToUse, GridToWorld(c, r), Quaternion.identity, transform);
                 tile.layer = LayerMask.NameToLayer("Floor");
                 tile.name  = $"Tile_{c}_{r}";
             }
@@ -219,11 +227,16 @@ public class LevelManager : MonoBehaviour
     {
         Event e = Event.current;
         if (e.type == EventType.KeyDown) {
-            if (e.keyCode == KeyCode.Alpha2) LoadLevel("level2");
-            if (e.keyCode == KeyCode.Alpha4) LoadLevel("level4");
-            if (e.keyCode == KeyCode.Alpha6) LoadLevel("level6");
-            if (e.keyCode == KeyCode.Alpha8) LoadLevel("level8");
-            if (e.keyCode == KeyCode.F) LoadLevel("final_level");
+            if (e.keyCode == KeyCode.Alpha0) LoadLevel("level1");
+            if (e.keyCode == KeyCode.Alpha1) LoadLevel("level2");
+            if (e.keyCode == KeyCode.Alpha2) LoadLevel("level3");
+            if (e.keyCode == KeyCode.Alpha3) LoadLevel("level4");
+            if (e.keyCode == KeyCode.Alpha4) LoadLevel("level5");
+            if (e.keyCode == KeyCode.Alpha5) LoadLevel("level6");
+            if (e.keyCode == KeyCode.Alpha6) LoadLevel("level7");
+            if (e.keyCode == KeyCode.Alpha7) LoadLevel("level8");
+            if (e.keyCode == KeyCode.Alpha8) LoadLevel("level9");
+            if (e.keyCode == KeyCode.Alpha9) LoadLevel("final_level");
         }
     }
 }

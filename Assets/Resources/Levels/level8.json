@@ -2,19 +2,20 @@
     "name": "Nivel 8",
     "tamañoCasilla": 1.0,
     "grid": [
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        ".#..."
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        ".B..."
     ],
     "enemies": [
-        { "type": "Slime", "col": 3, "row": 3 }
+        { "type": "Wizard", "col": 3, "row": 3 },
+        { "type": "Bat", "col": 5, "row": 5 }
     ],
     "traps": []
 }

@@ -2,19 +2,19 @@
     "name": "Nivel Boss",
     "tamañoCasilla": 1.0,
     "grid": [
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        ".#..."
+        "DDDDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDcDD",
+        "DDDDD",
+        ".D..."
     ],
     "enemies": [
-        { "type": "Slime", "col": 3, "row": 3 }
+        { "type": "Boss", "col": 3, "row": 3 }
     ],
     "traps": []
 }
