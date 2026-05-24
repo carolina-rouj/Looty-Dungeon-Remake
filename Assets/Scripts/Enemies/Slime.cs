@@ -2,14 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Slime: MonoBehaviour
+public class Slime : MonoBehaviour
 {
     public float timeWaitMove = 1.0f;
     public float speed = 3.0f;
-    public float tamañoCasilla = 1.0f; //REVIEW - por poner algo
+    public float tamañoCasilla = 1.0f;
     public float scaleSpeed = 10f;
+    public int lives = 1;
+    public GameObject rastroSlimePrefab;
     public Animator ani;
-    // public GameObject RastroSlime;
 
     private bool movementActive = false;
     private bool isLanding = false;
@@ -17,31 +18,89 @@ public class Slime: MonoBehaviour
     private float timer = 0f;
     private Vector3 targetPosition, lastPosition, groundPosition;
     private Vector3 normalScale, targetScale;
-    private Vector3[] directions = new Vector3[] {Vector3.forward, Vector3.back, Vector3.right, Vector3.left};
+    private Vector3[] directions = new Vector3[] { Vector3.forward, Vector3.back, Vector3.right, Vector3.left };
+    private int obstacleLayerMask;
 
     void Start()
     {
         ani = GetComponent<Animator>();
-        targetPosition = transform.position;
-        lastPosition = transform.position;
         normalScale = transform.localScale;
         targetScale = normalScale;
+        obstacleLayerMask = ~LayerMask.GetMask("Floor");
+
+        // Alinear al centro de casilla más cercano al inicio
+        if (GridManager.Instance != null)
+        {
+            Vector3 snapped = GridManager.Instance.SnapToGrid(transform.position);
+            transform.position = snapped;
+            targetPosition     = snapped;
+            lastPosition       = snapped;
+        }
+        else
+        {
+            targetPosition = transform.position;
+            lastPosition   = transform.position;
+        }
     }
+
+    // --- Daño y muerte ---
+
+    public void Hurt()
+    {
+        --lives;
+        if (lives <= 0) Die();
+    }
+
+    private void Die()
+    {
+        movementActive = false;
+        isPreJumping = false;
+        Destroy(gameObject, 0.5f);
+    }
+
+    // --- Movimiento ---
 
     void SelectDirection()
     {
-        int dir = Random.Range(0,4);
-        Vector3 moveDir = directions[dir];
-        groundPosition = transform.position + moveDir * tamañoCasilla;
+        ShuffleDirections();
+
+        bool found = false;
+        foreach (Vector3 dir in directions)
+        {
+            Vector3 candidate = transform.position + dir * tamañoCasilla;
+
+            Collider[] hits = Physics.OverlapSphere(candidate, 0.3f, obstacleLayerMask);
+            bool blocked = false;
+            foreach (Collider c in hits)
+            {
+                if (c.gameObject != gameObject) { blocked = true; break; }
+            }
+
+            if (!blocked)
+            {
+                groundPosition = candidate;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) return; // todas las casillas bloqueadas — esperar
+
         isLanding = false;
         isPreJumping = true;
         targetScale = new Vector3(normalScale.x * 1.3f, normalScale.y * 0.6f, normalScale.z * 1.3f);
         StartCoroutine(JumpSequence());
-        //TODO - añadir caso de colisiones con otros obstaculos o player
-        //TODO - debe dejar rastro de slime al moverse
     }
 
-    // efecto de gelatina en el salto
+    void ShuffleDirections()
+    {
+        for (int i = directions.Length - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (directions[i], directions[j]) = (directions[j], directions[i]);
+        }
+    }
+
     IEnumerator JumpSequence()
     {
         yield return new WaitForSeconds(0.12f);
@@ -67,7 +126,17 @@ public class Slime: MonoBehaviour
             {
                 targetScale = new Vector3(normalScale.x * 1.3f, normalScale.y * 0.6f, normalScale.z * 1.3f);
                 StartCoroutine(ReturnToNormal());
-                //if (lastPosition != groundPosition) Instantiate(RastroSlime, lastPosition, Quaternion.identity);
+
+                // Dejar rastro en la casilla anterior (posado sobre la superficie del tile)
+                if (rastroSlimePrefab != null && lastPosition != groundPosition)
+                {
+                    Vector3 rastroPos = new Vector3(
+                        lastPosition.x,
+                        lastPosition.y - tamañoCasilla * 0.5f + 0.05f,
+                        lastPosition.z);
+                    Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                }
+
                 lastPosition = groundPosition;
                 isLanding = false;
                 movementActive = false;
