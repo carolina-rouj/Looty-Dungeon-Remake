@@ -269,6 +269,8 @@ MonoBehaviour:
   speed: 3
   "tama\xF1oCasilla": 1
   scaleSpeed: 10
+  lives: 1
+  rastroSlimePrefab: {fileID: 4834583842880920505, guid: 1ea88906e64c4b90b864fb6ccfe82ec1, type: 3}
   ani: {fileID: 0}
 --- !u!65 &8370022144087398894
 BoxCollider:

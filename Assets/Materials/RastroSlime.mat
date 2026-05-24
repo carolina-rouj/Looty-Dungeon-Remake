@@ -22,6 +22,6 @@ Material:
     m_TexEnvs: []
     m_Floats:
     - _FresnelPower: 0.05
-    - _Opacity: 0.9
+    - _Opacity: 0.4
     m_Colors:
-    - _Color: {r: 0.15, g: 0.9, b: 0.05, a: 0.9}
+    - _Color: {r: 0.2, g: 0.65, b: 0.1, a: 0.4}

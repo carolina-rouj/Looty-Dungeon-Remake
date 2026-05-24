@@ -29,9 +29,9 @@ public class Slime : MonoBehaviour
         obstacleLayerMask = ~LayerMask.GetMask("Floor");
 
         // Alinear al centro de casilla más cercano al inicio
-        if (GridManager.Instance != null)
+        if (LevelManager.Instance != null)
         {
-            Vector3 snapped = GridManager.Instance.SnapToGrid(transform.position);
+            Vector3 snapped = LevelManager.Instance.SnapToGrid(transform.position);
             transform.position = snapped;
             targetPosition     = snapped;
             lastPosition       = snapped;
@@ -64,27 +64,35 @@ public class Slime : MonoBehaviour
     {
         ShuffleDirections();
 
+        int floorMask = LayerMask.GetMask("Floor");
         bool found = false;
         foreach (Vector3 dir in directions)
         {
             Vector3 candidate = transform.position + dir * tamañoCasilla;
 
+            // Check obstáculos
             Collider[] hits = Physics.OverlapSphere(candidate, 0.3f, obstacleLayerMask);
             bool blocked = false;
             foreach (Collider c in hits)
             {
                 if (c.gameObject != gameObject) { blocked = true; break; }
             }
+            if (blocked) continue;
 
-            if (!blocked)
-            {
-                groundPosition = candidate;
-                found = true;
-                break;
-            }
+            // Check suelo: buscamos en Y=0 porque los tiles están ahí
+            Vector3 floorCheck = new Vector3(candidate.x, 0f, candidate.z);
+            if (Physics.OverlapSphere(floorCheck, 0.3f, floorMask).Length == 0) continue;
+
+            // Snap al centro exacto de la casilla destino
+            Vector3 snapped = LevelManager.Instance != null
+                ? LevelManager.Instance.SnapToGrid(candidate)
+                : candidate;
+            groundPosition = new Vector3(snapped.x, transform.position.y, snapped.z);
+            found = true;
+            break;
         }
 
-        if (!found) return; // todas las casillas bloqueadas — esperar
+        if (!found) return;
 
         isLanding = false;
         isPreJumping = true;
@@ -130,10 +138,7 @@ public class Slime : MonoBehaviour
                 // Dejar rastro en la casilla anterior (posado sobre la superficie del tile)
                 if (rastroSlimePrefab != null && lastPosition != groundPosition)
                 {
-                    Vector3 rastroPos = new Vector3(
-                        lastPosition.x,
-                        lastPosition.y - tamañoCasilla * 0.5f + 0.05f,
-                        lastPosition.z);
+                    Vector3 rastroPos = new Vector3(lastPosition.x, 1f, lastPosition.z);
                     Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
                 }
 
