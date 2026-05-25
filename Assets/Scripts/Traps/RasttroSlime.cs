@@ -1,1 +1,0 @@
-//TODO - cuando el player caiga aqui, animacion de atrapado y ralentizarlo

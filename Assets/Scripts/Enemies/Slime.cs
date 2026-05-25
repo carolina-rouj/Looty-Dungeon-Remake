@@ -127,6 +127,13 @@ public class Slime : MonoBehaviour
             transform.position = targetPosition;
             if (!isLanding)
             {
+                // El slime acaba de abandonar la casilla anterior: spawneamos el rastro ahora
+                if (rastroSlimePrefab != null && lastPosition != groundPosition)
+                {
+                    Vector3 rastroPos = new Vector3(lastPosition.x, 1f, lastPosition.z);
+                    Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                }
+
                 isLanding = true;
                 targetPosition = groundPosition;
             }
@@ -134,13 +141,6 @@ public class Slime : MonoBehaviour
             {
                 targetScale = new Vector3(normalScale.x * 1.3f, normalScale.y * 0.6f, normalScale.z * 1.3f);
                 StartCoroutine(ReturnToNormal());
-
-                // Dejar rastro en la casilla anterior (posado sobre la superficie del tile)
-                if (rastroSlimePrefab != null && lastPosition != groundPosition)
-                {
-                    Vector3 rastroPos = new Vector3(lastPosition.x, 1f, lastPosition.z);
-                    Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
-                }
 
                 lastPosition = groundPosition;
                 isLanding = false;
