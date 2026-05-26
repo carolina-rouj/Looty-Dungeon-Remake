@@ -16,6 +16,7 @@
     "enemies": [
         { "type": "Boss", "col": 3, "row": 3 }
     ],
-    "traps": []
+    "traps": [],
+    "fallingFloor": true
 }
 
