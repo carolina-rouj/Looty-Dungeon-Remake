@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,6 +20,8 @@ public class LevelManager : MonoBehaviour
 
     // trampas del nivel
     public GameObject rastroSlimePrefab;
+    public GameObject spiderWebsPrefab;
+    public GameObject retractileForkPrefab;
 
     // altura Y de spawn para que los enemigos no traspasen el suelo
     public float enemySpawnHeight = 1f;
@@ -38,6 +41,8 @@ public class LevelManager : MonoBehaviour
     private List<GameObject> spawnedObjects = new List<GameObject>();
     private Dictionary<string, GameObject> enemyPrefabs;
     private Dictionary<string, GameObject> trapPrefabs;
+    private Dictionary<int, List<GameObject>> tilesByRow = new Dictionary<int, List<GameObject>>();
+    private Coroutine fallingCoroutine;
 
     void Awake()
     {
@@ -57,7 +62,8 @@ public class LevelManager : MonoBehaviour
 
         trapPrefabs = new Dictionary<string, GameObject>
         {
-            { "RastroSlime", rastroSlimePrefab },
+            { "RastroSlime",    rastroSlimePrefab    },
+            { "RetractileFork", retractileForkPrefab },
         };
 
         LoadAndBuild();
@@ -66,6 +72,10 @@ public class LevelManager : MonoBehaviour
     // Borra el nivel actual antes de cargar otro
     void ClearLevel()
     {
+        StopAllCoroutines();
+        fallingCoroutine = null;
+        tilesByRow.Clear();
+
         foreach (Transform child in transform)
             Destroy(child.gameObject);
 
@@ -108,6 +118,9 @@ public class LevelManager : MonoBehaviour
         SpawnEnemies();
         SpawnTraps();
 
+        if (levelData.fallingFloor)
+            fallingCoroutine = StartCoroutine(FallingFloors());
+
         Debug.Log($"[LevelManager] Nivel '{levelData.name}' cargado.");
     }
 
@@ -147,6 +160,10 @@ public class LevelManager : MonoBehaviour
                 GameObject tile = Instantiate(prefabToUse, GridToWorld(c, r), Quaternion.identity, transform);
                 tile.layer = LayerMask.NameToLayer("Floor");
                 tile.name  = $"Tile_{c}_{r}";
+
+                if (!tilesByRow.ContainsKey(r))
+                    tilesByRow[r] = new List<GameObject>();
+                tilesByRow[r].Add(tile);
             }
         }
     }
@@ -221,6 +238,63 @@ public class LevelManager : MonoBehaviour
                p.x <=  MaxBoundX + tamañoCasilla * 0.5f &&
                p.z >=  MinBoundZ - tamañoCasilla * 0.5f &&
                p.z <=  MaxBoundZ + tamañoCasilla * 0.5f;
+    }
+
+    // codigo para que el suelo caiga por filas
+    IEnumerator FallingFloors()
+    {
+        for (int r = 0; r < gridRows; r++)
+        {
+            yield return new WaitForSeconds(2f);   // pausa silenciosa antes del aviso
+
+            if (tilesByRow.ContainsKey(r))
+            {
+                List<GameObject> rowTiles = tilesByRow[r];
+                tilesByRow.Remove(r);
+                StartCoroutine(ShakeAndFallRow(rowTiles));
+            }
+
+            yield return new WaitForSeconds(1f);   // espera el shake antes de pasar a la siguiente fila
+        }
+        fallingCoroutine = null;
+    }
+
+    IEnumerator ShakeAndFallRow(List<GameObject> tiles)
+    {
+        // temblor (1s)
+        float elapsed = 0f;
+        float shakeDuration = 1f;
+        float shakeMag = 0.07f;
+
+        Vector3[] origins = new Vector3[tiles.Count];
+        for (int i = 0; i < tiles.Count; i++)
+            if (tiles[i] != null) origins[i] = tiles[i].transform.position;
+
+        while (elapsed < shakeDuration)
+        {
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                if (tiles[i] == null) continue;
+                float ox = Mathf.Sin((elapsed + i * 0.3f) * 22f) * shakeMag;
+                float oz = Mathf.Cos((elapsed + i * 0.5f) * 17f) * shakeMag * 0.5f;
+                tiles[i].transform.position = origins[i] + new Vector3(ox, 0f, oz);
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // caída física del bloque
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            GameObject tile = tiles[i];
+            if (tile == null) continue;
+            tile.transform.position = origins[i];
+            Collider col = tile.GetComponent<Collider>();
+            if (col) col.enabled = false;
+            Rigidbody rb = tile.AddComponent<Rigidbody>(); 
+            rb.useGravity = true;
+            Destroy(tile, 2f);
+        }
     }
 
     void OnGUI()
