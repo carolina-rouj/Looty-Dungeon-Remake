@@ -54,6 +54,6 @@ El script tambien falla si detecta `error CS*`, `MissingComponentException`, `Nu
 
 ## Known Notes
 
-- No se ha hecho commit ni push desde Codex.
+- Commit hecho, falta push: el trabajo de runtime, validadores y docs ya esta consolidado en `mateus` por delante de `origin/develop`; queda decidir el push.
 - El player Linux tiene un smoke oculto `-vjSmokeTest`, pero en entorno headless no se usa como evidencia principal porque puede requerir display/X.
 - Unity puede imprimir ruido interno de `UnityEditor.Search.SearchDatabase` durante el arranque; la bateria acepta solo los marcadores OK y filtra errores relevantes del proyecto.

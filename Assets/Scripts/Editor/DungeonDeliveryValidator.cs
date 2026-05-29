@@ -149,7 +149,7 @@ public static class DungeonDeliveryValidator
         RequireContains(memory, "Docs/Captures/04_boss_room.png", "Memory should embed boss capture.");
 
         string handoff = File.ReadAllText("Docs/HANDOFF_NEXT_STEPS.md");
-        RequireContains(handoff, "No se ha hecho commit ni push", "Handoff should preserve git/push status.");
+        RequireContains(handoff, "Commit hecho, falta push", "Handoff should preserve git/push status.");
         RequireContains(handoff, "Revision manual pendiente", "Handoff should list manual review tasks.");
         RequireContains(handoff, "Docs/RUBRIC_SCORECARD.md", "Handoff should link the rubric scorecard.");
 
@@ -169,7 +169,7 @@ public static class DungeonDeliveryValidator
         string prDraft = File.ReadAllText("Docs/PR_DESCRIPTION_DRAFT.md");
         RequireContains(prDraft, "Tools/run_validation.sh", "PR draft should include the validation command.");
         RequireContains(prDraft, "Manual Checklist Before Merge", "PR draft should include manual merge checklist.");
-        RequireContains(prDraft, "No se ha hecho commit ni push", "PR draft should preserve git/push status.");
+        RequireContains(prDraft, "Commit hecho, falta push", "PR draft should preserve git/push status.");
     }
 
     private static void RequireContains(string text, string expected, string message)

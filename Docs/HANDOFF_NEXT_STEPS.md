@@ -16,7 +16,7 @@ Estado actual de la rama `mateus` tras la ultima iteracion automatizada.
 - `Tools/run_validation.sh` tambien escanea logs para errores C# y excepciones runtime comunes del proyecto.
 - Capturas 3D automaticas regeneradas en `Docs/Captures/`.
 - Build Linux generado correctamente en `Builds/Linux/` mediante `DungeonBuildSmoke`.
-- No se ha hecho commit ni push desde Codex.
+- Commit hecho, falta push: la rama `mateus` esta 1 commit por delante de `origin/develop` con todo el trabajo (runtime, validadores, polish, docs). Pendiente decidir el push.
 
 ## Ultima bateria verde
 
