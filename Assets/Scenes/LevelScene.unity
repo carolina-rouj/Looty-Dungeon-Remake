@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc0fa469f8c2d3727afc0a5ef3e70a9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelFileName: level2
+  levelFileName: level1
   floorPrefab: {fileID: 8637310614735709027, guid: 3a2ec0d26f7945267b281cf797ff6857, type: 3}
   floorDarkPrefab: {fileID: 2532716515480726834, guid: 911d9334f38ee797eba12544184a1b29, type: 3}
   floorBluePrefab: {fileID: 7256594741082851610, guid: 00e6fadfdead1ca69a4a6107db5d011d, type: 3}

@@ -1,0 +1,18 @@
+{
+  "name": "Nivel 1",
+  "tamañoCasilla": 1.0,
+  "grid": [
+    "#####",
+    "#####",
+    "#####",
+    "#####",
+    "#####",
+    "#####",
+    "..#.."
+  ],
+  "enemies": [
+    { "type": "Slime", "col": 2, "row": 3 }
+  ],
+  "traps": [],
+  "fallingFloor": false
+}

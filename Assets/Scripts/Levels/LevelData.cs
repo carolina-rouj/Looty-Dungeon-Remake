@@ -22,7 +22,7 @@ public class EnemySpawn
 [Serializable]
 public class TrapSpawn
 {
-    public string type;  
+    public string type;   // "Spikes", "Flame", "Blade", "RastroSlime", "SpiderWebs", "RetractileFork"
     public int col;
     public int row;
 }

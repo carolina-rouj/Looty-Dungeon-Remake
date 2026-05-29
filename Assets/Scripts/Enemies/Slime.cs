@@ -20,10 +20,14 @@ public class Slime : MonoBehaviour
     private Vector3 normalScale, targetScale;
     private Vector3[] directions = new Vector3[] { Vector3.forward, Vector3.back, Vector3.right, Vector3.left };
     private int obstacleLayerMask;
+    private bool isDead;
+    private int maxLives;
 
     void Start()
     {
         ani = GetComponent<Animator>();
+        maxLives = Mathf.Max(1, lives);
+        EnemyHitFeedback.Ensure(gameObject).SetHealth(lives, maxLives);
         normalScale = transform.localScale;
         targetScale = normalScale;
         obstacleLayerMask = ~LayerMask.GetMask("Floor");
@@ -47,14 +51,23 @@ public class Slime : MonoBehaviour
 
     public void Hurt()
     {
+        if (isDead) return;
         --lives;
+        EnemyHitFeedback.Ensure(gameObject).Hit(Mathf.Max(0, lives), maxLives);
         if (lives <= 0) Die();
     }
 
     private void Die()
     {
+        isDead = true;
         movementActive = false;
         isPreJumping = false;
+        EnemyMovementUtility.DisableEnemyAfterDeath(gameObject);
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+            DungeonGameRuntime.Instance.PlayEnemyDeath(transform.position);
+        }
         Destroy(gameObject, 0.5f);
     }
 
@@ -116,7 +129,7 @@ public class Slime : MonoBehaviour
         targetPosition = groundPosition + Vector3.up;
         isPreJumping = false;
         movementActive = true;
-        ani.SetBool("movementActive", true);
+        if (ani != null) ani.SetBool("movementActive", true);
     }
 
     public void MoveSlime()
@@ -146,7 +159,7 @@ public class Slime : MonoBehaviour
                 isLanding = false;
                 movementActive = false;
                 timer = 0f;
-                ani.SetBool("movementActive", false);
+                if (ani != null) ani.SetBool("movementActive", false);
             }
         }
     }
@@ -159,6 +172,12 @@ public class Slime : MonoBehaviour
 
     void Update()
     {
+        if (isDead || !EnemyMovementUtility.IsGameplayActive())
+        {
+            if (ani != null) ani.SetBool("movementActive", false);
+            return;
+        }
+
         transform.localScale = Vector3.Lerp(transform.localScale, targetScale, scaleSpeed * Time.deltaTime);
 
         if (movementActive) MoveSlime();

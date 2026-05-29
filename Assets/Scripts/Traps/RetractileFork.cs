@@ -25,6 +25,11 @@ public class RetractileFork : MonoBehaviour
 
     void Update()
     {
+        if (DungeonGameRuntime.Instance != null && !DungeonGameRuntime.Instance.IsPlaying)
+        {
+            return;
+        }
+
         stateTimer -= Time.deltaTime;
 
         switch (state)
@@ -73,11 +78,21 @@ public class RetractileFork : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        TryDamage(other);
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        TryDamage(other);
+    }
+
+    private void TryDamage(Collider other)
+    {
         if (state == ForkState.Idle) return;
 
         if (other.CompareTag("Player"))
         {
-            // TODO: other.GetComponent<Player>().TakeDamage(damage);
+            DungeonGameRuntime.Instance?.DamagePlayer(damage, transform.position);
         }
     }
 }
