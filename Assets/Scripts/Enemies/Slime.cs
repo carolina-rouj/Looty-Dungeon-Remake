@@ -20,10 +20,14 @@ public class Slime : MonoBehaviour
     private Vector3 normalScale, targetScale;
     private Vector3[] directions = new Vector3[] { Vector3.forward, Vector3.back, Vector3.right, Vector3.left };
     private int obstacleLayerMask;
+    private bool isDead;
+    private int maxLives;
 
     void Start()
     {
         ani = GetComponent<Animator>();
+        maxLives = Mathf.Max(1, lives);
+        EnemyHitFeedback.Ensure(gameObject).SetHealth(lives, maxLives);
         normalScale = transform.localScale;
         targetScale = normalScale;
         obstacleLayerMask = ~LayerMask.GetMask("Floor");
@@ -47,14 +51,23 @@ public class Slime : MonoBehaviour
 
     public void Hurt()
     {
+        if (isDead) return;
         --lives;
+        EnemyHitFeedback.Ensure(gameObject).Hit(Mathf.Max(0, lives), maxLives);
         if (lives <= 0) Die();
     }
 
     private void Die()
     {
+        isDead = true;
         movementActive = false;
         isPreJumping = false;
+        EnemyMovementUtility.DisableEnemyAfterDeath(gameObject);
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+            DungeonGameRuntime.Instance.PlayEnemyDeath(transform.position);
+        }
         Destroy(gameObject, 0.5f);
     }
 
@@ -116,7 +129,7 @@ public class Slime : MonoBehaviour
         targetPosition = groundPosition + Vector3.up;
         isPreJumping = false;
         movementActive = true;
-        ani.SetBool("movementActive", true);
+        if (ani != null) ani.SetBool("movementActive", true);
     }
 
     public void MoveSlime()
@@ -131,7 +144,8 @@ public class Slime : MonoBehaviour
                 if (rastroSlimePrefab != null && lastPosition != groundPosition)
                 {
                     Vector3 rastroPos = new Vector3(lastPosition.x, 1f, lastPosition.z);
-                    Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                    GameObject rastro = Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                    ApplyUrpMaterial(rastro, new Color(0.32f, 0.82f, 0.28f));
                 }
 
                 isLanding = true;
@@ -146,7 +160,7 @@ public class Slime : MonoBehaviour
                 isLanding = false;
                 movementActive = false;
                 timer = 0f;
-                ani.SetBool("movementActive", false);
+                if (ani != null) ani.SetBool("movementActive", false);
             }
         }
     }
@@ -157,8 +171,36 @@ public class Slime : MonoBehaviour
         targetScale = normalScale;
     }
 
+    private static void ApplyUrpMaterial(GameObject root, Color color)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0) return;
+        Material urp = RuntimeMaterials.Get("rastro_" + color.r.ToString("F2") + color.g.ToString("F2") + color.b.ToString("F2"), color);
+        foreach (Renderer renderer in renderers)
+        {
+            int count = renderer.sharedMaterials.Length;
+            if (count == 0)
+            {
+                renderer.sharedMaterial = urp;
+                continue;
+            }
+            Material[] mats = new Material[count];
+            for (int i = 0; i < count; i++)
+            {
+                mats[i] = urp;
+            }
+            renderer.sharedMaterials = mats;
+        }
+    }
+
     void Update()
     {
+        if (isDead || !EnemyMovementUtility.IsGameplayActive())
+        {
+            if (ani != null) ani.SetBool("movementActive", false);
+            return;
+        }
+
         transform.localScale = Vector3.Lerp(transform.localScale, targetScale, scaleSpeed * Time.deltaTime);
 
         if (movementActive) MoveSlime();

@@ -8,19 +8,30 @@ public class Boss : MonoBehaviour
     public Animator ani;
     public GameObject targetPlayer;
 
-    private int lives = 3;
+    private int lives = 8;
+    private int maxLives;
+    private bool isDead;
+    private float nextCastTime;
 
     void Start()
     {
         ani = GetComponent<Animator>();
         targetPlayer = GameObject.Find("Player");
+        maxLives = lives;
+        EnemyHitFeedback.Ensure(gameObject).SetHealth(lives, maxLives);
     }
 
     void MoveBoss()
     {
+        if (targetPlayer == null)
+        {
+            targetPlayer = GameObject.Find("Player");
+            if (targetPlayer == null) return;
+        }
+
         if (Vector3.Distance(transform.position, targetPlayer.transform.position) > detectionRange)
         {
-            ani.SetBool("movementActive", false);
+            if (ani != null) ani.SetBool("movementActive", false);
         }
         else
         {
@@ -29,25 +40,71 @@ public class Boss : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(lookPos);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime * 100f);
 
-            ani.SetBool("movementActive", true);
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
+            if (ani != null) ani.SetBool("movementActive", true);
+            EnemyMovementUtility.MoveForwardKeepingFloor(transform, speed * Time.deltaTime);
+        }
+    }
+
+    private void TryCast()
+    {
+        if (targetPlayer == null || Time.time < nextCastTime)
+        {
+            return;
+        }
+
+        Vector3 toPlayer = targetPlayer.transform.position - transform.position;
+        toPlayer.y = 0f;
+        float distance = toPlayer.magnitude;
+        if (distance < 2.2f || distance > detectionRange)
+        {
+            return;
+        }
+
+        nextCastTime = Time.time + 2.35f;
+        Color spellColor = new Color(1f, 0.28f, 0.08f);
+        Vector3 start = transform.position + Vector3.up * 1.05f;
+        EnemyProjectile.Launch(start, toPlayer.normalized, 3.8f, spellColor, 0.34f);
+
+        Vector3 side = Vector3.Cross(Vector3.up, toPlayer.normalized);
+        EnemyProjectile.Launch(start, (toPlayer.normalized + side * 0.45f).normalized, 3.4f, spellColor, 0.26f);
+        EnemyProjectile.Launch(start, (toPlayer.normalized - side * 0.45f).normalized, 3.4f, spellColor, 0.26f);
+
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.PlayEnemyCast(transform.position, spellColor);
         }
     }
 
     public void Hurt()
     {
+        if (isDead) return;
         --lives;
+        EnemyHitFeedback.Ensure(gameObject).Hit(Mathf.Max(0, lives), maxLives);
         if (lives <= 0) Die();
     }
 
     private void Die()
     {
-        ani.SetTrigger("die");
+        isDead = true;
+        EnemyMovementUtility.DisableEnemyAfterDeath(gameObject);
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+            DungeonGameRuntime.Instance.PlayEnemyDeath(transform.position);
+        }
+        if (ani != null) ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
 
     void Update()
     {
+        if (isDead || !EnemyMovementUtility.IsGameplayActive())
+        {
+            if (ani != null) ani.SetBool("movementActive", false);
+            return;
+        }
+
         MoveBoss();
+        TryCast();
     }
 }

@@ -12,17 +12,24 @@ public class SpiderWebs : MonoBehaviour
     private WebState currentState = WebState.Idle;
     private float stateTimer = 0f;
     private Animator animator;
+    private Renderer[] renderers;
     private bool playerEffectApplied = false;
 
     void Start()
     {
         animator = GetComponent<Animator>();
+        renderers = GetComponentsInChildren<Renderer>();
         stateTimer = idleDuration;
         UpdateAnimator();
     }
 
     void Update()
     {
+        if (DungeonGameRuntime.Instance != null && !DungeonGameRuntime.Instance.IsPlaying)
+        {
+            return;
+        }
+
         stateTimer -= Time.deltaTime;
         if (stateTimer <= 0f) AdvanceState();
     }
@@ -45,7 +52,29 @@ public class SpiderWebs : MonoBehaviour
 
     void UpdateAnimator()
     {
-        animator?.SetInteger("webState", (int)currentState);
+        if (animator != null)
+        {
+            animator.SetInteger("webState", (int)currentState);
+        }
+
+        Color color = currentState switch
+        {
+            WebState.Idle => new Color(0.45f, 0.58f, 0.66f),
+            WebState.Partial => new Color(0.2f, 0.85f, 1f),
+            WebState.Full => new Color(0.94f, 0.1f, 0.22f),
+            _ => Color.white
+        };
+
+        if (renderers == null) return;
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null) continue;
+            renderer.material.color = color;
+            if (renderer.material.HasProperty("_BaseColor"))
+            {
+                renderer.material.SetColor("_BaseColor", color);
+            }
+        }
     }
 
     void OnTriggerEnter(Collider other)
@@ -65,12 +94,16 @@ public class SpiderWebs : MonoBehaviour
         if (currentState == WebState.Partial)
         {
             playerEffectApplied = true;
-            // TODO: playerCollider.GetComponent<Player>().ApplyParalysis(timeParalised);
+            PlayerMovement movement = playerCollider.GetComponent<PlayerMovement>();
+            if (movement != null)
+            {
+                movement.ApplySlow(0.1f, timeParalised);
+            }
         }
         else if (currentState == WebState.Full)
         {
             playerEffectApplied = true;
-            // TODO: playerCollider.GetComponent<Player>().TakeDamage(1);
+            DungeonGameRuntime.Instance?.DamagePlayer(1, transform.position);
         }
     }
 }

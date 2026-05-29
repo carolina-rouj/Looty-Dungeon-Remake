@@ -2,22 +2,25 @@
     "name": "Nivel 4",
     "tamañoCasilla": 1.0,
     "grid": [
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "#####",
-        "..#.."
+        "BBBBB",
+        "B###B",
+        "B###B",
+        "B###B",
+        "B###B",
+        "B###B",
+        "B###B",
+        "B#C#B",
+        "BBcBB",
+        "..B.."
     ],
     "enemies": [
-        { "type": "Slime", "col": 3, "row": 3 }
+        { "type": "Slime", "col": 1, "row": 3 },
+        { "type": "Gnome", "col": 3, "row": 4 },
+        { "type": "Bat", "col": 2, "row": 6 }
     ],
-    "traps": [],
+    "traps": [
+        { "type": "Spikes", "col": 2, "row": 5 },
+        { "type": "Flame", "col": 2, "row": 7 }
+    ],
     "fallingFloor": true
 }

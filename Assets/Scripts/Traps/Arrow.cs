@@ -19,7 +19,7 @@ public class Arrow : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // TODO: other.GetComponent<Player>().TakeDamage(damage);
+            DungeonGameRuntime.Instance?.DamagePlayer(damage, transform.position);
         }
         Destroy(gameObject); 
     }
