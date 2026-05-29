@@ -172,8 +172,13 @@ public class LevelManager : MonoBehaviour
                 if (prefabToUse == null) continue;
 
                 GameObject tile = Instantiate(prefabToUse, GridToWorld(c, r), Quaternion.identity, transform);
-                tile.layer = LayerMask.NameToLayer("Floor");
+                int floorLayer = LayerMask.NameToLayer("Floor");
+                if (floorLayer >= 0)
+                {
+                    tile.layer = floorLayer;
+                }
                 tile.name  = $"Tile_{c}_{r}";
+                EnsureUrpMaterials(tile, GetFloorColor(rowStr[c]));
                 if (!floorTilesByRow.TryGetValue(r, out List<GameObject> rowTiles))
                 {
                     rowTiles = new List<GameObject>();
@@ -201,6 +206,7 @@ public class LevelManager : MonoBehaviour
                 Vector3 pos = GridToWorld(spawn.col, spawn.row);
                 pos.y = enemySpawnHeight;
                 enemy = Instantiate(prefab, pos, Quaternion.identity);
+                EnsureUrpMaterials(enemy, GetEnemyColor(spawn.type));
             }
 
             if (enemy != null)
@@ -547,7 +553,65 @@ public class LevelManager : MonoBehaviour
         {
             collider.enabled = false;
         }
+        Color decoColor = name.Contains("Torch")
+            ? new Color(0.55f, 0.32f, 0.18f)
+            : name.Contains("Throne")
+                ? new Color(0.6f, 0.18f, 0.12f)
+                : name.Contains("Caliz")
+                    ? new Color(1f, 0.78f, 0.18f)
+                    : new Color(0.6f, 0.45f, 0.3f);
+        EnsureUrpMaterials(instance, decoColor);
         spawnedObjects.Add(instance);
+    }
+
+    private static Color GetEnemyColor(string type)
+    {
+        return type switch
+        {
+            "Slime" => new Color(0.38f, 0.82f, 0.36f),
+            "Bat" => new Color(0.32f, 0.16f, 0.42f),
+            "Wizard" => new Color(0.6f, 0.42f, 1f),
+            "Gnome" => new Color(0.95f, 0.74f, 0.32f),
+            "Boss" => new Color(0.88f, 0.18f, 0.18f),
+            _ => new Color(0.7f, 0.7f, 0.7f)
+        };
+    }
+
+    private static Color GetFloorColor(char cell)
+    {
+        return cell switch
+        {
+            '#' => new Color(0.66f, 0.30f, 0.18f),
+            'D' => new Color(0.45f, 0.22f, 0.13f),
+            'B' => new Color(0.30f, 0.38f, 0.55f),
+            'c' => new Color(0.78f, 0.10f, 0.10f),
+            'C' => new Color(0.86f, 0.16f, 0.14f),
+            _ => new Color(0.55f, 0.27f, 0.16f)
+        };
+    }
+
+    private static void EnsureUrpMaterials(GameObject root, Color color)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0) return;
+
+        string materialKey = "level_" + color.r.ToString("F2") + color.g.ToString("F2") + color.b.ToString("F2");
+        Material urp = RuntimeMaterials.Get(materialKey, color);
+        foreach (Renderer renderer in renderers)
+        {
+            int count = renderer.sharedMaterials.Length;
+            if (count == 0)
+            {
+                renderer.sharedMaterial = urp;
+                continue;
+            }
+            Material[] mats = new Material[count];
+            for (int i = 0; i < count; i++)
+            {
+                mats[i] = urp;
+            }
+            renderer.sharedMaterials = mats;
+        }
     }
 
     private void CreateBlock(string name, Vector3 position, Vector3 scale, Color color)

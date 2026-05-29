@@ -2519,6 +2519,10 @@ public static class RuntimeEnemyFactory
 
         switch (type)
         {
+            case "Slime":
+                enemy.AddComponent<Slime>();
+                BuildSlimeVisual(enemy.transform);
+                break;
             case "Bat":
                 enemy.AddComponent<Bat>();
                 BuildBatVisual(enemy.transform);
@@ -2542,6 +2546,16 @@ public static class RuntimeEnemyFactory
         }
 
         return enemy;
+    }
+
+    private static void BuildSlimeVisual(Transform root)
+    {
+        Transform visual = CreateVisualRoot(root, 0.10f, 5f);
+        CreatePart(visual, PrimitiveType.Sphere, "Slime Body", new Vector3(0f, 0.42f, 0f), new Vector3(0.85f, 0.65f, 0.85f), new Color(0.32f, 0.82f, 0.28f));
+        CreatePart(visual, PrimitiveType.Sphere, "Slime Drop", new Vector3(0f, 0.78f, 0f), new Vector3(0.38f, 0.30f, 0.38f), new Color(0.50f, 0.94f, 0.40f));
+        CreatePart(visual, PrimitiveType.Sphere, "Slime Eye L", new Vector3(-0.14f, 0.52f, 0.32f), Vector3.one * 0.10f, new Color(0.04f, 0.05f, 0.06f));
+        CreatePart(visual, PrimitiveType.Sphere, "Slime Eye R", new Vector3(0.14f, 0.52f, 0.32f), Vector3.one * 0.10f, new Color(0.04f, 0.05f, 0.06f));
+        CreatePart(visual, PrimitiveType.Cube, "Slime Mouth", new Vector3(0f, 0.34f, 0.36f), new Vector3(0.22f, 0.06f, 0.04f), new Color(0.10f, 0.20f, 0.10f));
     }
 
     private static Transform CreateVisualRoot(Transform root, float bobAmplitude, float bobSpeed)

@@ -144,7 +144,8 @@ public class Slime : MonoBehaviour
                 if (rastroSlimePrefab != null && lastPosition != groundPosition)
                 {
                     Vector3 rastroPos = new Vector3(lastPosition.x, 1f, lastPosition.z);
-                    Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                    GameObject rastro = Instantiate(rastroSlimePrefab, rastroPos, Quaternion.identity);
+                    ApplyUrpMaterial(rastro, new Color(0.32f, 0.82f, 0.28f));
                 }
 
                 isLanding = true;
@@ -168,6 +169,28 @@ public class Slime : MonoBehaviour
     {
         yield return new WaitForSeconds(0.1f);
         targetScale = normalScale;
+    }
+
+    private static void ApplyUrpMaterial(GameObject root, Color color)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0) return;
+        Material urp = RuntimeMaterials.Get("rastro_" + color.r.ToString("F2") + color.g.ToString("F2") + color.b.ToString("F2"), color);
+        foreach (Renderer renderer in renderers)
+        {
+            int count = renderer.sharedMaterials.Length;
+            if (count == 0)
+            {
+                renderer.sharedMaterial = urp;
+                continue;
+            }
+            Material[] mats = new Material[count];
+            for (int i = 0; i < count; i++)
+            {
+                mats[i] = urp;
+            }
+            renderer.sharedMaterials = mats;
+        }
     }
 
     void Update()
