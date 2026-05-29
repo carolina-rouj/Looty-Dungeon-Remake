@@ -23,6 +23,11 @@ public class LevelManager : MonoBehaviour
     public GameObject spiderWebsPrefab;
     public GameObject retractileForkPrefab;
 
+    // decoraciones (prefabs reales de Carolina)
+    public GameObject floorTorchPrefab;
+    public GameObject thronePrefab;
+    public GameObject calizPrefab;
+
     // altura Y de spawn para que los enemigos no traspasen el suelo
     public float enemySpawnHeight = 1f;
 
@@ -501,10 +506,48 @@ public class LevelManager : MonoBehaviour
         CreateBlock("Wall West", new Vector3(-halfW, wallHeight * 0.5f, 0f), new Vector3(0.35f, wallHeight, gridRows * tamañoCasilla + 1f), new Color(0.42f, 0.13f, 0.1f));
 
         CreateDecoration("Torch", GridToWorld(0, 1) + Vector3.up * 0.7f, PrimitiveType.Capsule, new Vector3(0.18f, 0.45f, 0.18f), new Color(1f, 0.35f, 0.05f));
+
+        if (floorTorchPrefab != null)
+        {
+            SpawnDecorationPrefab(floorTorchPrefab, "Decoration FloorTorch Right", GridToWorld(Mathf.Max(1, gridCols - 1), 1), Quaternion.identity, 1f);
+        }
+
         CreateDecoration("Crate", GridToWorld(Mathf.Max(1, gridCols - 2), 1) + Vector3.up * 0.35f, PrimitiveType.Cube, Vector3.one * 0.65f, new Color(0.45f, 0.2f, 0.08f));
         CreateDecoration("Pillar", GridToWorld(1, Mathf.Max(1, gridRows - 2)) + Vector3.up * 0.55f, PrimitiveType.Cylinder, new Vector3(0.35f, 0.65f, 0.35f), new Color(0.54f, 0.24f, 0.18f));
         CreateDecoration("Statue", GridToWorld(Mathf.Max(1, gridCols - 2), Mathf.Max(1, gridRows - 2)) + Vector3.up * 0.55f, PrimitiveType.Capsule, new Vector3(0.35f, 0.55f, 0.35f), new Color(0.44f, 0.43f, 0.38f));
         CreateDecoration("Banner", GridToWorld(0, Mathf.Clamp(gridRows / 2, 0, gridRows - 1)) + new Vector3(-0.35f, 0.75f, 0f), PrimitiveType.Cube, new Vector3(0.06f, 0.75f, 0.42f), new Color(0.78f, 0.06f, 0.1f));
+
+        // boss room: throne en el centro detras del boss; caliz como trofeo
+        bool isBossRoom = levelFileName == "final_level";
+        if (isBossRoom)
+        {
+            if (thronePrefab != null)
+            {
+                Vector3 thronePos = GridToWorld(gridCols / 2, gridRows - 3);
+                SpawnDecorationPrefab(thronePrefab, "Decoration Throne", thronePos, Quaternion.Euler(0f, 180f, 0f), 1.2f);
+            }
+            if (calizPrefab != null)
+            {
+                Vector3 calizPos = GridToWorld(gridCols / 2, gridRows - 4);
+                SpawnDecorationPrefab(calizPrefab, "Decoration Caliz", calizPos, Quaternion.identity, 0.8f);
+            }
+        }
+    }
+
+    private void SpawnDecorationPrefab(GameObject prefab, string name, Vector3 position, Quaternion rotation, float scale)
+    {
+        if (prefab == null) return;
+        GameObject instance = Instantiate(prefab, position, rotation, transform);
+        instance.name = name;
+        if (scale != 1f)
+        {
+            instance.transform.localScale *= scale;
+        }
+        foreach (Collider collider in instance.GetComponentsInChildren<Collider>())
+        {
+            collider.enabled = false;
+        }
+        spawnedObjects.Add(instance);
     }
 
     private void CreateBlock(string name, Vector3 position, Vector3 scale, Color color)
