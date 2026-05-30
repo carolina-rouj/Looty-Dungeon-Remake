@@ -5,6 +5,7 @@ public class LevelData
 {
     public string name;
     public float tamañoCasilla = 1.0f;
+    public float floorYOffset = 0f;
     public string[] grid;
     public EnemySpawn[] enemies;
     public TrapSpawn[] traps;
@@ -35,7 +36,8 @@ public class WallSpawn
     public int col;
     public int row;
     public int rotation; // 0=front(-Z), 90=left(-X), 180=back(+Z), 270=right(+X)
-    public string style; // null/"Wall"=estándar, "Broken"=derruida
+    public string type;  // "Plain" (default) | "Door"
+    public float width = 1f;
 }
 
 [Serializable]
@@ -46,4 +48,5 @@ public class DecorationSpawn
     public int row;
     public float rotation; // rotación en el eje Y (0, 90, 180, 270)
     public float yOffset;  // altura extra sobre decorationSpawnHeight (por defecto 0)
+    public float scale = 1f;
 }
