@@ -355,21 +355,22 @@ public class DungeonGameRuntime : MonoBehaviour
     // expone los limites del nivel (MinBoundZ/MaxBoundZ/MaxBoundX), pero no marca
     // puntos de spawn/salida. Los derivamos de esos limites.
 
+    // OJO: el GridToWorld de Carolina centra el nivel en el ORIGEN DEL MUNDO e ignora
+    // la posicion del GameObject LevelManager, asi que estos puntos se calculan en
+    // coordenadas de mundo (no relativas al transform del LevelManager).
     private Vector3 ComputePlayerSpawn(LevelManager manager)
     {
-        Vector3 origin = manager.transform.position;
-        return new Vector3(origin.x, origin.y + 0.7f, manager.MinBoundZ);
+        return new Vector3(0f, 0.7f, manager.MinBoundZ);
     }
 
     private Vector3 ComputeExitPosition(LevelManager manager)
     {
-        Vector3 origin = manager.transform.position;
-        return new Vector3(origin.x, origin.y + 0.1f, manager.MaxBoundZ);
+        return new Vector3(0f, 0.1f, manager.MaxBoundZ);
     }
 
     private Vector3 ComputeCameraFocus(LevelManager manager)
     {
-        return manager.transform.position;
+        return new Vector3(0f, 0f, (manager.MinBoundZ + manager.MaxBoundZ) * 0.5f);
     }
 
     // El LevelManager de Carolina instancia sus propios prefabs de enemigos pero no
