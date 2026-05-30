@@ -2,20 +2,14 @@
     "name": "Nivel 2",
     "tamañoCasilla": 1.0,
     "grid": [
-      "..#..",
       "#####",
       "#####",
-      "..###",
       "#####",
       "#####",
-      "..###",
       "#####",
       "#####",
-      "..###",
       "#####",
-      "#####",
-      "..###",
-      "#####"
+      "..#.."
     ],
     "enemies": [
       { "type": "Slime", "col": 1, "row": 3 },
@@ -24,24 +18,5 @@
     "traps": [
       { "type": "Spikes", "col": 2, "row": 5 }
     ],
-    "traps": [],
-    "walls": [
-        { "col": 2, "row": 0,  "rotation": 0  },
-        { "col": 0, "row": 1,  "rotation": 90 },
-        { "col": 0, "row": 2,  "rotation": 90 },
-        { "col": 0, "row": 4,  "rotation": 90 },
-        { "col": 0, "row": 5,  "rotation": 90 },
-        { "col": 0, "row": 7,  "rotation": 90 },
-        { "col": 0, "row": 8,  "rotation": 90 },
-        { "col": 0, "row": 10, "rotation": 90 },
-        { "col": 0, "row": 11, "rotation": 90 },
-        { "col": 0, "row": 13, "rotation": 90 }
-    ],
-    "decorations": [
-        { "type": "Barrel",     "col": 4, "row": 2, "rotation": 0,   "yOffset": 0.5 },
-        { "type": "Barrel",     "col": 3, "row": 1, "rotation": 0,   "yOffset": 0.5 },
-        { "type": "Caliz",      "col": 2, "row": 5, "rotation": 0,   "yOffset": 0.5 },
-        { "type": "Barrel",     "col": 1, "row": 7, "rotation": 0,   "yOffset": 0.5 },
-        { "type": "Barrel",     "col": 0, "row": 8, "rotation": 0,   "yOffset": 0.5 }
-    ]
+    "fallingFloor": false
 }

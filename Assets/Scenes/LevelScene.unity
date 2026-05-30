@@ -903,8 +903,6 @@ MonoBehaviour:
   gnomePrefab: {fileID: 0}
   bossPrefab: {fileID: 0}
   rastroSlimePrefab: {fileID: 4834583842880920505, guid: 1ea88906e64c4b90b864fb6ccfe82ec1, type: 3}
-  wallMaterial: {fileID: 2100000, guid: b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8, type: 2}
-  wallBrokenPrefab: {fileID: 4716283941527384029, guid: a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9, type: 3}
   spiderWebsPrefab: {fileID: 0}
   retractileForkPrefab: {fileID: 0}
   floorTorchPrefab: {fileID: 6734827051049198837, guid: 73cdff7be8d96a800a81bc76d346275b, type: 3}

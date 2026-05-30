@@ -23,24 +23,13 @@ public class LevelManager : MonoBehaviour
     public GameObject spiderWebsPrefab;
     public GameObject retractileForkPrefab;
 
-    // paredes del nivel
-    public Material wallMaterial;
-    public GameObject wallBrokenPrefab;
-
-    // decoraciones del nivel
-    public GameObject thronePrefab;
+    // decoraciones (prefabs reales de Carolina)
     public GameObject floorTorchPrefab;
+    public GameObject thronePrefab;
     public GameObject calizPrefab;
-    public GameObject cauldronPrefab;
-    public GameObject bookshelfPrefab;
-    public GameObject barrelPrefab;
-    public GameObject carpetPrefab;
-    public GameObject tapestryPrefab;
 
     // altura Y de spawn para que los enemigos no traspasen el suelo
     public float enemySpawnHeight = 1f;
-    // altura Y de spawn para que las decoraciones queden encima del cubo del suelo
-    public float decorationSpawnHeight = 1.0f;
 
     // Singleton
     public static LevelManager Instance { get; private set; }
@@ -59,10 +48,7 @@ public class LevelManager : MonoBehaviour
     private HashSet<GameObject> activeFloorTiles = new HashSet<GameObject>();
     private Dictionary<string, GameObject> enemyPrefabs;
     private Dictionary<string, GameObject> trapPrefabs;
-    private Dictionary<string, GameObject> decorationPrefabs;
-    private Dictionary<int, List<GameObject>> tilesByRow = new Dictionary<int, List<GameObject>>();
-    private Dictionary<int, List<GameObject>> objectsByRow = new Dictionary<int, List<GameObject>>();
-    private Coroutine fallingCoroutine;
+    private Coroutine fallingRowsRoutine;
 
     void Awake()
     {
@@ -87,28 +73,17 @@ public class LevelManager : MonoBehaviour
             { "RetractileFork", retractileForkPrefab },
         };
 
-        decorationPrefabs = new Dictionary<string, GameObject>
-        {
-            { "Throne",     thronePrefab     },
-            { "FloorTorch", floorTorchPrefab },
-            { "Caliz",      calizPrefab      },
-            { "Cauldron",   cauldronPrefab   },
-            { "Bookshelf",  bookshelfPrefab  },
-            { "Barrel",     barrelPrefab     },
-            { "Carpet",     carpetPrefab     },
-            { "Tapestry",   tapestryPrefab   },
-        };
-
         LoadAndBuild();
     }
 
     // Borra el nivel actual antes de cargar otro
     void ClearLevel()
     {
-        StopAllCoroutines();
-        fallingCoroutine = null;
-        tilesByRow.Clear();
-        objectsByRow.Clear();
+        if (fallingRowsRoutine != null)
+        {
+            StopCoroutine(fallingRowsRoutine);
+            fallingRowsRoutine = null;
+        }
 
         foreach (Transform child in transform)
             Destroy(child.gameObject);
@@ -151,10 +126,10 @@ public class LevelManager : MonoBehaviour
         tamañoCasilla = levelData.tamañoCasilla > 0f ? levelData.tamañoCasilla : 1.0f;
 
         BuildFloor();
-        BuildWalls();
+        BuildWallsAndDecorations();
+        SpawnCoins();
         SpawnEnemies();
         SpawnTraps();
-        SpawnDecorations();
 
         Debug.Log($"[LevelManager] Nivel '{levelData.name}' cargado.");
         if (DungeonGameRuntime.Instance != null)
@@ -215,41 +190,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    GameObject SpawnWallSegment(Vector3 pos, Quaternion rot)
-    {
-        GameObject w = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        w.transform.position = pos;
-        w.transform.rotation = rot;
-        w.transform.localScale = new Vector3(1f, 2f, 0.2f);
-        if (wallMaterial != null)
-            w.GetComponent<Renderer>().material = wallMaterial;
-        return w;
-    }
-
-    void BuildWalls()
-    {
-        if (levelData.walls == null) return;
-        foreach (var spawn in levelData.walls)
-        {
-            Vector3 pos = GridToWorld(spawn.col, spawn.row);
-            pos.y = 1f;
-            switch (spawn.rotation)
-            {
-                case 0:   pos.z -= 0.5f; break;
-                case 90:  pos.x -= 0.5f; break;
-                case 180: pos.z += 0.5f; break;
-                case 270: pos.x += 0.5f; break;
-            }
-            Quaternion rot = Quaternion.Euler(0f, spawn.rotation, 0f);
-            bool isBroken = spawn.style == "Broken";
-            GameObject w = isBroken && wallBrokenPrefab != null
-                ? Instantiate(wallBrokenPrefab, pos, rot)
-                : SpawnWallSegment(pos, rot);
-            if (!tilesByRow.ContainsKey(spawn.row)) tilesByRow[spawn.row] = new List<GameObject>();
-            tilesByRow[spawn.row].Add(w);
-        }
-    }
-
     void SpawnEnemies()
     {
         if (levelData.enemies == null) return;
@@ -278,12 +218,6 @@ public class LevelManager : MonoBehaviour
                     DungeonGameRuntime.Instance.RegisterEnemy(enemy);
                 }
             }
-            Vector3 pos = GridToWorld(spawn.col, spawn.row);
-            pos.y = enemySpawnHeight;
-            spawnedObjects.Add(Instantiate(prefab, pos, Quaternion.identity));
-            if (!objectsByRow.ContainsKey(spawn.row))
-                objectsByRow[spawn.row] = new List<GameObject>();
-            objectsByRow[spawn.row].Add(spawnedObjects[spawnedObjects.Count - 1]);
         }
     }
 
@@ -307,26 +241,6 @@ public class LevelManager : MonoBehaviour
 
             GameObject trap = Instantiate(prefab, GridToWorld(spawn.col, spawn.row), Quaternion.identity, transform);
             spawnedObjects.Add(trap);
-        }
-    }
-
-    void SpawnDecorations()
-    {
-        if (levelData.decorations == null) return;
-        foreach (var spawn in levelData.decorations)
-        {
-            if (!decorationPrefabs.TryGetValue(spawn.type, out GameObject prefab) || prefab == null)
-            {
-                Debug.LogWarning($"[LevelManager] Prefab de decoración '{spawn.type}' no asignado.");
-                continue;
-            }
-            Quaternion rot = Quaternion.Euler(0f, spawn.rotation, 0f);
-            Vector3 pos = GridToWorld(spawn.col, spawn.row);
-            pos.y = decorationSpawnHeight + spawn.yOffset;
-            spawnedObjects.Add(Instantiate(prefab, pos, rot));
-            if (!objectsByRow.ContainsKey(spawn.row))
-                objectsByRow[spawn.row] = new List<GameObject>();
-            objectsByRow[spawn.row].Add(spawnedObjects[spawnedObjects.Count - 1]);
         }
     }
 
@@ -411,25 +325,30 @@ public class LevelManager : MonoBehaviour
             }
         }
 
-            List<GameObject> rowAll = new List<GameObject>();
-            if (tilesByRow.ContainsKey(r))
+        return count;
+    }
+
+    public bool HasFloorAt(Vector3 worldPosition)
+    {
+        foreach (GameObject tile in activeFloorTiles)
+        {
+            if (tile == null) continue;
+
+            Vector3 tilePosition = tile.transform.position;
+            float half = tamañoCasilla * 0.48f;
+            if (Mathf.Abs(worldPosition.x - tilePosition.x) <= half &&
+                Mathf.Abs(worldPosition.z - tilePosition.z) <= half)
             {
-                rowAll.AddRange(tilesByRow[r]);
-                tilesByRow.Remove(r);
+                return true;
             }
-            if (objectsByRow.ContainsKey(r))
-            {
-                rowAll.AddRange(objectsByRow[r]);
-                objectsByRow.Remove(r);
-            }
-            float rowZ = GridToWorld(0, r).z;
-            foreach (RastroSlime rastro in FindObjectsByType<RastroSlime>(FindObjectsSortMode.None))
-            {
-                if (Mathf.Abs(rastro.transform.position.z - rowZ) < tamañoCasilla * 0.5f)
-                    rowAll.Add(rastro.gameObject);
-            }
-            if (rowAll.Count > 0)
-                StartCoroutine(ShakeAndFallRow(rowAll));
+        }
+
+        return false;
+    }
+
+    public void StartFallingRowsIfNeeded(int levelIndex)
+    {
+        StopFallingRows();
 
         if (levelData != null && levelData.fallingFloor && levelIndex >= 2 && levelIndex < 9)
         {
