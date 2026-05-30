@@ -2,21 +2,44 @@
     "name": "Nivel Boss",
     "tamañoCasilla": 1.0,
     "grid": [
+        ".D...",
         "DDDDD",
-        "DDCDD",
-        "DDCDD",
-        "DDCDD",
-        "DDCDD",
-        "DDCDD",
-        "DDCDD",
         "DDcDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
         "DDDDD",
-        ".D..."
+        "DDDDD"
     ],
     "enemies": [
         { "type": "Boss", "col": 3, "row": 3 }
     ],
     "traps": [],
+    "walls": [
+        { "col": 1, "row": 0, "rotation": 0  },
+        { "col": 0, "row": 1, "rotation": 90 },
+        { "col": 0, "row": 2, "rotation": 90 },
+        { "col": 0, "row": 3, "rotation": 90 },
+        { "col": 0, "row": 4, "rotation": 90 },
+        { "col": 0, "row": 5, "rotation": 90 },
+        { "col": 0, "row": 6, "rotation": 90 },
+        { "col": 0, "row": 7, "rotation": 90 },
+        { "col": 0, "row": 8, "rotation": 90 },
+        { "col": 0, "row": 9, "rotation": 90 }
+    ],
+    "decorations": [
+        { "type": "Throne",     "col": 2, "row": 7, "rotation": 180, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 1, "row": 7, "rotation": 0, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 3, "row": 7, "rotation": 0, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 1, "row": 4, "rotation": 0, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 3, "row": 4, "rotation": 0, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 0, "row": 2, "rotation": 0, "yOffset": 0.5 },
+        { "type": "FloorTorch", "col": 4, "row": 2, "rotation": 0, "yOffset": 0.5 },
+        { "type": "Tapestry",   "col": 1, "row": 8, "rotation": 0,   "yOffset": 2.5 },
+        { "type": "Tapestry",   "col": 3, "row": 8, "rotation": 0,   "yOffset": 2.5 }
+    ],
     "fallingFloor": true
 }
 

@@ -2,6 +2,7 @@
     "name": "Nivel 4",
     "tamañoCasilla": 1.0,
     "grid": [
+        "..#..",
         "#####",
         "#####",
         "#####",
@@ -12,12 +13,29 @@
         "#####",
         "#####",
         "#####",
-        "#####",
-        "..#.."
+        "#####"
     ],
     "enemies": [
         { "type": "Slime", "col": 3, "row": 3 }
     ],
     "traps": [],
+    "walls": [
+        { "col": 2, "row": 0,  "rotation": 0  },
+        { "col": 0, "row": 1,  "rotation": 90 },
+        { "col": 0, "row": 2,  "rotation": 90 },
+        { "col": 0, "row": 3,  "rotation": 90 },
+        { "col": 0, "row": 4,  "rotation": 90 },
+        { "col": 0, "row": 5,  "rotation": 90 },
+        { "col": 0, "row": 6,  "rotation": 90 },
+        { "col": 0, "row": 7,  "rotation": 90 },
+        { "col": 0, "row": 8,  "rotation": 90 },
+        { "col": 0, "row": 9,  "rotation": 90 },
+        { "col": 0, "row": 10, "rotation": 90 },
+        { "col": 0, "row": 11, "rotation": 90 }
+    ],
+    "decorations": [
+        { "type": "FloorTorch", "col": 0, "row": 0, "rotation": 0 },
+        { "type": "FloorTorch", "col": 4, "row": 0, "rotation": 0 }
+    ],
     "fallingFloor": true
 }

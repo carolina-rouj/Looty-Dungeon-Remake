@@ -6,32 +6,32 @@ public class Boss : MonoBehaviour
     public float detectionRange = 5.0f;
     public float rotationSpeed = 5.0f;
     public Animator ani;
-    public GameObject targetPlayer;
+    // TODO (player): public GameObject targetPlayer;
 
     private int lives = 3;
 
     void Start()
     {
         ani = GetComponent<Animator>();
-        targetPlayer = GameObject.Find("Player");
+        // TODO (player): targetPlayer = GameObject.Find("Player");
     }
 
     void MoveBoss()
     {
-        if (Vector3.Distance(transform.position, targetPlayer.transform.position) > detectionRange)
-        {
-            ani.SetBool("movementActive", false);
-        }
-        else
-        {
-            Vector3 lookPos = targetPlayer.transform.position - transform.position;
-            lookPos.y = 0;
-            Quaternion targetRotation = Quaternion.LookRotation(lookPos);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime * 100f);
-
-            ani.SetBool("movementActive", true);
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        }
+        // TODO (player): descomentar cuando el player esté implementado
+        // if (Vector3.Distance(transform.position, targetPlayer.transform.position) > detectionRange)
+        // {
+        //     ani.SetBool("movementActive", false);
+        // }
+        // else
+        // {
+        //     Vector3 lookPos = targetPlayer.transform.position - transform.position;
+        //     lookPos.y = 0;
+        //     Quaternion targetRotation = Quaternion.LookRotation(lookPos);
+        //     transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime * 100f);
+        //     ani.SetBool("movementActive", true);
+        //     transform.Translate(Vector3.forward * speed * Time.deltaTime);
+        // }
     }
 
     public void Hurt()
