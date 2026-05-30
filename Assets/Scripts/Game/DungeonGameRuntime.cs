@@ -1376,11 +1376,11 @@ public class DungeonGameRuntime : MonoBehaviour
     private static HashSet<GameObject> FindEnemyObjectsForStandaloneSmoke()
     {
         HashSet<GameObject> enemies = new HashSet<GameObject>();
-        foreach (Slime enemy in FindObjectsByType<Slime>()) enemies.Add(enemy.gameObject);
-        foreach (Bat enemy in FindObjectsByType<Bat>()) enemies.Add(enemy.gameObject);
-        foreach (Wizard enemy in FindObjectsByType<Wizard>()) enemies.Add(enemy.gameObject);
-        foreach (Gnome enemy in FindObjectsByType<Gnome>()) enemies.Add(enemy.gameObject);
-        foreach (Boss enemy in FindObjectsByType<Boss>()) enemies.Add(enemy.gameObject);
+        foreach (Slime enemy in FindObjectsByType<Slime>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
+        foreach (Bat enemy in FindObjectsByType<Bat>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
+        foreach (Wizard enemy in FindObjectsByType<Wizard>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
+        foreach (Gnome enemy in FindObjectsByType<Gnome>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
+        foreach (Boss enemy in FindObjectsByType<Boss>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
         return enemies;
     }
 
