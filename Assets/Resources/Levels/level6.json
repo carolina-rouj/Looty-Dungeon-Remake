@@ -16,7 +16,15 @@
         "#####"
     ],
     "enemies": [
-        { "type": "Slime", "col": 3, "row": 3 }
+        { "type": "Slime", "col": 1, "row": 3 },
+        { "type": "Wizard", "col": 5, "row": 3 },
+        { "type": "Bat", "col": 2, "row": 6 },
+        { "type": "Gnome", "col": 4, "row": 6 }
+    ],
+    "traps": [
+        { "type": "Spikes", "col": 3, "row": 3 },
+        { "type": "Flame", "col": 3, "row": 6 },
+        { "type": "Blade", "col": 3, "row": 5 }
     ],
     "traps": [],
     "walls": [

@@ -34,17 +34,32 @@ public class Gnome : MonoBehaviour
 
     public void Hurt()
     {
+        if (isDead) return;
+        EnemyHitFeedback.Ensure(gameObject).Hit(0, 1);
         Die();
     }
 
     private void Die()
     {
-        ani.SetTrigger("die");
+        isDead = true;
+        EnemyMovementUtility.DisableEnemyAfterDeath(gameObject);
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+            DungeonGameRuntime.Instance.PlayEnemyDeath(transform.position);
+        }
+        if (ani != null) ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
 
     void Update()
     {
+        if (isDead || !EnemyMovementUtility.IsGameplayActive())
+        {
+            if (ani != null) ani.SetBool("movementActive", false);
+            return;
+        }
+
         MoveGnome();
     }
 }

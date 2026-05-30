@@ -1,0 +1,23 @@
+{
+  "name": "Nivel 3",
+  "tamañoCasilla": 1.0,
+  "grid": [
+    "DDDDD",
+    "D###D",
+    "D###D",
+    "D###D",
+    "D###D",
+    "D###D",
+    "D#C#D",
+    "DDcDD",
+    "..D.."
+  ],
+  "enemies": [
+    { "type": "Slime", "col": 1, "row": 3 },
+    { "type": "Bat", "col": 3, "row": 5 }
+  ],
+  "traps": [
+    { "type": "Spikes", "col": 2, "row": 4 }
+  ],
+  "fallingFloor": true
+}

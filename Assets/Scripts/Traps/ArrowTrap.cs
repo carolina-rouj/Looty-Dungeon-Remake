@@ -13,6 +13,7 @@ public class ArrowTrap : MonoBehaviour
 
     public Transform diana;
     // TODO (player): private Player player;
+    public Transform diana;     
     private float timer = 0f;
 
     void Start()
@@ -39,16 +40,50 @@ public class ArrowTrap : MonoBehaviour
         // {
         //     timer = 0f;
         // }
+        if (DungeonGameRuntime.Instance == null || !DungeonGameRuntime.Instance.IsPlaying)
+        {
+            return;
+        }
+
+        if (Diana.IsPlayerOnAnyDiana)
+        {
+            timer -= Time.deltaTime;
+            if (timer <= 0f)
+            {
+                Disparo();
+                timer = shootInterval;
+            }
+        }
+        else
+        {
+            timer = 0f;
+        }
     }
 
     void Disparo()
     {
-        if (arrowPrefab == null || diana == null) return;
+        if (diana == null) return;
 
         Vector3 direction = (diana.position - transform.position).normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
 
-        GameObject arrow = Instantiate(arrowPrefab, transform.position, rotation);
+        GameObject arrow = arrowPrefab != null
+            ? Instantiate(arrowPrefab, transform.position, rotation)
+            : GameObject.CreatePrimitive(PrimitiveType.Capsule);
+
+        if (arrowPrefab == null)
+        {
+            arrow.name = "Arrow";
+            arrow.transform.position = transform.position;
+            arrow.transform.rotation = rotation;
+            arrow.transform.localScale = new Vector3(0.12f, 0.12f, 0.55f);
+            Collider collider = arrow.GetComponent<Collider>();
+            if (collider != null) collider.isTrigger = true;
+            Rigidbody body = arrow.AddComponent<Rigidbody>();
+            body.useGravity = false;
+            body.isKinematic = true;
+            arrow.AddComponent<Arrow>();
+        }
 
         Arrow arrowScript = arrow.GetComponent<Arrow>();
         if (arrowScript != null)

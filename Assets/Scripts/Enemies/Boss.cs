@@ -8,7 +8,10 @@ public class Boss : MonoBehaviour
     public Animator ani;
     // TODO (player): public GameObject targetPlayer;
 
-    private int lives = 3;
+    private int lives = 8;
+    private int maxLives;
+    private bool isDead;
+    private float nextCastTime;
 
     void Start()
     {
@@ -36,18 +39,34 @@ public class Boss : MonoBehaviour
 
     public void Hurt()
     {
+        if (isDead) return;
         --lives;
+        EnemyHitFeedback.Ensure(gameObject).Hit(Mathf.Max(0, lives), maxLives);
         if (lives <= 0) Die();
     }
 
     private void Die()
     {
-        ani.SetTrigger("die");
+        isDead = true;
+        EnemyMovementUtility.DisableEnemyAfterDeath(gameObject);
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+            DungeonGameRuntime.Instance.PlayEnemyDeath(transform.position);
+        }
+        if (ani != null) ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
 
     void Update()
     {
+        if (isDead || !EnemyMovementUtility.IsGameplayActive())
+        {
+            if (ani != null) ani.SetBool("movementActive", false);
+            return;
+        }
+
         MoveBoss();
+        TryCast();
     }
 }

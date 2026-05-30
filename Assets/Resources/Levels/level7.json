@@ -1,0 +1,27 @@
+{
+  "name": "Nivel 7",
+  "tamañoCasilla": 1.0,
+  "grid": [
+    "BBBBBBB",
+    "B#####B",
+    "B#...#B",
+    "B#####B",
+    "B#####B",
+    "B#...#B",
+    "B#####B",
+    "B#####B",
+    "BBBcBBB",
+    "...B..."
+  ],
+  "enemies": [
+    { "type": "Slime", "col": 1, "row": 2 },
+    { "type": "Slime", "col": 5, "row": 2 },
+    { "type": "Wizard", "col": 3, "row": 4 },
+    { "type": "Bat", "col": 1, "row": 7 }
+  ],
+  "traps": [
+    { "type": "Blade", "col": 3, "row": 3 },
+    { "type": "Flame", "col": 3, "row": 6 }
+  ],
+  "fallingFloor": true
+}

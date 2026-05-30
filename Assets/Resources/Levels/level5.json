@@ -1,0 +1,25 @@
+{
+  "name": "Nivel 5",
+  "tamañoCasilla": 1.0,
+  "grid": [
+    "#######",
+    "#######",
+    "##...##",
+    "#######",
+    "#######",
+    "##...##",
+    "#######",
+    "#######",
+    "...#..."
+  ],
+  "enemies": [
+    { "type": "Slime", "col": 1, "row": 3 },
+    { "type": "Wizard", "col": 5, "row": 4 },
+    { "type": "Gnome", "col": 3, "row": 6 }
+  ],
+  "traps": [
+    { "type": "Flame", "col": 3, "row": 3 },
+    { "type": "Spikes", "col": 3, "row": 6 }
+  ],
+  "fallingFloor": true
+}

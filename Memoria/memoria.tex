@@ -1,0 +1,435 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[catalan]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{ragged2e}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{caption}
+
+\setstretch{1.3}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\justifying
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue!50!black,
+    pdftitle={Looty Dungeon 3D - Memoria},
+    pdfauthor={Carolina Rouj i Mateus Grandolfi}
+}
+
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Looty Dungeon 3D}
+\fancyhead[R]{\small VJ -- FIB UPC}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+% ----- Pagina de titulo -----
+\begin{titlepage}
+\centering
+\vspace*{1.0cm}
+
+{\Huge\bfseries Looty Dungeon 3D\par}
+\vspace{0.5cm}
+{\Large Exercici 3D -- VJ (Videojocs)\par}
+
+\vspace{2cm}
+\includegraphics[width=0.55\linewidth]{captures/04_boss_room.png}\par
+
+\vspace{2cm}
+
+{\large\textbf{Autors:}\par}
+{\large Carolina Rouj\par}
+{\large Mateus Grandolfi\par}
+
+\vspace{1cm}
+{\large\textbf{Assignatura:} VJ -- Videojocs\par}
+{\large\textbf{Curs:} 2025/26 (Q2)\par}
+{\large\textbf{Facultat d'Informatica de Barcelona (FIB)}\par}
+{\large\textbf{Universitat Politecnica de Catalunya (UPC)}\par}
+
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+% ----- Index -----
+\tableofcontents
+\newpage
+
+% ===== 1. El Joc =====
+\section{El Joc}
+
+\subsection{Looty Dungeon com a referencia}
+
+El nostre projecte es basa en \textit{Looty Dungeon}, un joc \textit{rogue-lite}
+de mazmorres en 3D amb perspectiva isometrica desenvolupat per
+\textbf{Tinytouchtales}, publicat el 2016 per a iOS i Android i posteriorment
+adaptat a altres plataformes mobils. El joc va rebre una bona acollida pel
+seu estil voxel-low-poly, la seva curva de dificultat creixent i les seves
+trampes ambientals.
+
+\begin{table}[H]
+\centering
+\caption{Fitxa tecnica del joc original \textit{Looty Dungeon}.}
+\label{tab:looty}
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+\textbf{Concepte} & \textbf{Valor} \\
+\midrule
+Any de publicacio & 2016 \\
+Estudi & Tinytouchtales (Berlin) \\
+Plataformes & iOS, Android, Windows Phone, Apple TV \\
+Genere & Rogue-lite, dungeon crawler, accio-aventura \\
+Public objectiu & Jugadors casuals i fans del genere mazmorrer \\
+Tecnologia & Unity 5.x (motor) \\
+Acollida & 4,2/5 a App Store, vora 100.000 descarregues globals \\
+Web oficial & \url{https://www.tinytouchtales.com/looty-dungeon/} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La Taula~\ref{tab:looty} resumeix la fitxa del joc original. El projecte de la
+nostra practica esta inspirat directament en aquest joc, simplificant-ne
+algunes mecaniques pel temps disponible (3 setmanes) i adaptant-ho a un
+equip de dues persones treballant en Unity 6 amb scripts en C\#.
+
+\subsection{Equip i tecnologies}
+
+L'equip esta format per dues persones treballant a parts iguals (Carolina
+i Mateus). Hem utilitzat Unity \textbf{6000.4.4f1}, control de versions amb
+Git/GitHub i Visual Studio Code com a editor. Tot el codi es propi; les
+referencies externes (tutorials i documentacio) es citen a la bibliografia.
+
+% ===== 2. Descripcio del projecte =====
+\section{Descripcio del projecte}
+
+\subsection{Objectius i trets caracteristics}
+
+L'objectiu es desenvolupar un dungeon crawler en 3D inspirat en
+\textit{Looty Dungeon} amb:
+
+\begin{itemize}[noitemsep]
+    \item 10 sales jugables amb dificultat creixent (Figura~\ref{fig:level1}).
+    \item Tres enemics diferents mes un boss final.
+    \item Trampes ambientals, monedes recollibles i decoracions.
+    \item Caiguda de blocs per files a partir de la sala 3.
+    \item Interficie grafica completa, sons i musica.
+    \item Tres pantalles (menu, joc, credits) i pantalla de pausa.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{captures/01_level1_start.png}
+\caption{Vista de la primera sala. La camera ortografica isometrica esta
+orientada de forma similar al \textit{Looty Dungeon} original.}
+\label{fig:level1}
+\end{figure}
+
+La Figura~\ref{fig:level1} mostra la sala inicial. El jugador apareix a la
+casella central inferior, on s'orienta cap a la porta de sortida.
+
+\subsection{Instruccions de joc}
+
+\begin{itemize}[noitemsep]
+    \item \textbf{WASD} o fletxes: moure el jugador per la sala.
+    \item \textbf{Shift}: dash curt per esquivar.
+    \item \textbf{Espai} o \textbf{clic esquerre}: atacar.
+    \item \textbf{P} o \textbf{Esc}: pausar el joc; \textbf{Enter}/\textbf{P}
+    reprendre, \textbf{M} tornar al menu.
+    \item \textbf{R} o \textbf{Enter}: reintentar tras una derrota.
+    \item \textbf{0}--\textbf{9}: saltar directament a la sala corresponent.
+\end{itemize}
+
+\subsection{Diagrama de finestres i flow chart}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.9\linewidth}
+\centering
+\ttfamily
+\begin{tabular}{c}
+\hline
+{[Menu]} \\
+$\downarrow$ \\
+{[Credits]} $\leftrightarrow$ {[Menu]} \\
+$\downarrow$ Jugar / Enter \\
+{[Sala N]} -- WASD, ataques, monedes, trampes \\
+$\downarrow$ \\
+{[Pausa]} $\leftrightarrow$ {[Sala N]} \\
+$\downarrow$ Tots enemics morts \\
+{[Porta oberta]} $\rightarrow$ {[Sala N+1]} \\
+$\downarrow$ Sala 10 superada \\
+{[Victoria]} $\rightarrow$ {[Menu]} \\
+\quad\quad o si Vida = 0 \\
+{[Game Over]} $\rightarrow$ Reintentar / Menu \\
+\hline
+\end{tabular}
+\end{minipage}
+\caption{Flow chart de pantalles del joc.}
+\label{fig:flow}
+\end{figure}
+
+El diagrama de la Figura~\ref{fig:flow} resumeix els estats: \texttt{Menu},
+\texttt{Credits}, \texttt{Playing}, \texttt{Paused}, \texttt{GameOver} i
+\texttt{Victory} (gestionats per l'enum \texttt{DungeonState} de la classe
+\texttt{DungeonGameRuntime}).
+
+\subsection{Funcionalitats implementades}
+
+\subsubsection{Mecaniques basiques}
+
+\begin{itemize}[noitemsep]
+    \item \textbf{10 sales}: definides en JSON dins \texttt{Assets/Resources/Levels/}
+    (\texttt{level1.json}...\texttt{level9.json} + \texttt{final\_level.json}).
+    \item \textbf{Dificultat creixent}: el nombre d'enemics, trampes i la
+    presencia de blocs que cauen creix de sala en sala.
+    \item \textbf{Porta condicionada}: a cada sala la porta esta tancada
+    fins que tots els enemics han estat eliminats.
+    \item \textbf{Quatre tipus d'enemic} + \textbf{boss}: \texttt{Slime},
+    \texttt{Bat}, \texttt{Wizard}, \texttt{Gnome} i \texttt{Boss}.
+    \item \textbf{Rastre ralentitzant}: el \texttt{Slime} deixa un rastre
+    (\texttt{RastroSlime}) que alenteix el jugador.
+    \item \textbf{Boss multi-cop}: 8 cops per derrotar-lo amb una barra de
+    vida visible.
+    \item \textbf{Atac del jugador} amb feedback visual i sonor; els
+    enemics tambe ataquen al jugador (contacte o projectils).
+    \item \textbf{Tres cors}: el jugador perd una vida per cada atac rebut
+    amb exit. A zero cors es perd la partida.
+    \item \textbf{Suelo que cau}: a partir de la sala 3 fins a la sala 9
+    (incloses), els blocs cauen per files; la sala final del boss no te
+    aquesta mecanica.
+\end{itemize}
+
+\subsubsection{Trampes}
+
+Implementades cinc tipus, complint amb escreix les tres requerides:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Spikes}: punxes que apareixen del terra i fan dany.
+    \item \textbf{Flame}: foc periodic que crema al jugador.
+    \item \textbf{Blade}: fulla rotatoria que dana per contacte.
+    \item \textbf{SpiderWebs}: teranyines que alenteixen el jugador.
+    \item \textbf{RetractileFork}: forquilla retractil que dana en extendre's.
+\end{itemize}
+
+\subsubsection{Decoracions, monedes i interficie}
+
+\begin{itemize}[noitemsep]
+    \item \textbf{5+ decoracions diferents}: torxa, caixa, pilar, estatua,
+    pancarta i, en sales avancades, el tro i el calze.
+    \item \textbf{Monedes} (\texttt{CoinPickup}) i \textbf{cors de vida}
+    (\texttt{HealthPickup}, 18\,\% de drop si \texttt{Health}\,$<3$).
+    \item \textbf{Interficie}: vida amb tres pips, comptador de monedes,
+    sales superades, sala actual, cronometre i indicador grafic de les
+    10 sales (Figura~\ref{fig:level9}).
+    \item \textbf{Pantalles}: menu, credits, joc, pausa, derrota i victoria.
+    \item \textbf{Audio}: musica procedural per al menu, joc i boss, mes
+    11 efectes de so sintetitzats en runtime.
+    \item \textbf{Tecles 0--9}: salt directe a la sala corresponent per
+    facilitar avaluacio i debug.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{captures/03_level9_falling_floor.png}
+\caption{Sala 9 amb el suelo caient per files. L'indicador de progres
+del HUD mostra els punts verds per a les sales completades.}
+\label{fig:level9}
+\end{figure}
+
+La Figura~\ref{fig:level9} il-lustra la mecanica de suelo caient: les
+peces es marquen amb un parpadeig vermellos abans de col-lapsar, avisant
+al jugador.
+
+\subsubsection{Game Feeling}
+
+S'ha posat especial cura en el feedback visual i sonor per evitar la
+desaparicio instantania d'entitats:
+
+\begin{itemize}[noitemsep]
+    \item Atacs amb \textit{slash} visual, \textit{shake} de camera, sons
+    diferenciats segons impactin o no.
+    \item Cops a enemics amb \textit{flash}, barra de vida, text flotant
+    de dany i particules.
+    \item Mort d'enemics amb retard, esclat de particules i text ``KO''.
+    \item Dany al jugador amb \textit{knockback}, parpadeig, overlay
+    vermell als bords i pulsacio quan queda nomes una vida.
+    \item Porta amb canvi de material, esclat de particules, text ``OPEN''
+    i so dedicat.
+    \item Monedes i cors amb rotacio, flotacio i feedback al recollir.
+    \item Suelo caient amb avis previ, animacio de caiguda i so.
+    \item Transicio amb fundit a negre entre sales.
+    \item Banner de seccio quan s'entra a un nou bloc de la mazmorra.
+    \item Ambient diferenciat per seccio (camera, niebla i llums) com es
+    veu en passar de sales 1--3 a 7--9 (Figura~\ref{fig:traps}).
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{captures/02_level6_traps.png}
+\caption{Sala 6 amb multiples trampes simultanies (Spikes, Flame i Blade).
+L'ambient es mes calid que a les sales inicials.}
+\label{fig:traps}
+\end{figure}
+
+\subsection{Decisions de disseny}
+
+Algunes decisions concretes que hem prises o desestimades:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Pres:} usar JSON per a definir les sales en
+    \texttt{Assets/Resources/Levels/}, fent l'edicio rapida sense
+    necessitat de recompilar.
+    \item \textbf{Pres:} generar moltes entitats (jugador, decoracions,
+    feedback visual) en runtime amb primitius (\texttt{PlayerVisualBuilder},
+    \texttt{RuntimeEnemyFactory}) i materials URP procedurals, evitant
+    dependencies d'assets pesats.
+    \item \textbf{Pres:} mantenir l'estil voxel/low-poly per coherencia
+    estetica, tant en els assets importats de Carolina (\texttt{floor},
+    \texttt{throne}, \texttt{floorTorch}, \texttt{caliz}) com en els
+    visuals procedurals.
+    \item \textbf{Pres:} drop ocasional de cors (18\,\%) per donar marge
+    d'error sense trivialitzar el joc.
+    \item \textbf{Desestimat:} sistema de \textit{leaderboard} online.
+    Substituit per persistencia local de la millor partida amb
+    \texttt{PlayerPrefs}.
+    \item \textbf{Desestimat:} sistema d'inventari/objectes consumibles.
+    Hauria ampliat l'abast mes enlla del temps disponible.
+\end{itemize}
+
+% ===== 3. Metodologia =====
+\section{Metodologia}
+
+\subsection{Organitzacio del treball}
+
+L'equip s'ha repartit el treball entre Carolina i Mateus seguint el
+patro del PDF de l'enunciat (colors verd i vermell). Les tasques de
+Carolina han estat:
+
+\begin{itemize}[noitemsep]
+    \item Diseny de les 10 sales i del boss; modelat 3D dels assets
+    (\texttt{floor}, \texttt{throne}, \texttt{floorTorch}, \texttt{caliz}).
+    \item Scripts d'enemics base (\texttt{Slime}, \texttt{Bat},
+    \texttt{Wizard}, \texttt{Gnome}, \texttt{Boss}) i del rastre del slime.
+    \item Trampes (\texttt{ArrowTrap}, \texttt{Diana}, \texttt{SpiderWebs},
+    \texttt{RetractileFork}) i \texttt{LevelManager} base.
+    \item Logica de caiguda de files al \texttt{LevelManager}.
+\end{itemize}
+
+Tasques de Mateus:
+
+\begin{itemize}[noitemsep]
+    \item Runtime jugable (\texttt{DungeonGameRuntime}) amb estat global,
+    HUD, menus, pausa, derrota, victoria, transicions i mes.
+    \item Combat del jugador (\texttt{PlayerMovement}, \texttt{PlayerCombat},
+    \texttt{PlayerHealth}) i feedback (\texttt{EnemyHitFeedback}, particules,
+    \textit{shake}, textos flotants).
+    \item Camera ortografica isometrica i sistema de llum/ambient.
+    \item Audio procedural (musica i SFX).
+    \item Pickups (\texttt{CoinPickup}, \texttt{HealthPickup}) i porta.
+    \item Validadors automatitzats en Unity batchmode i smoke tests.
+\end{itemize}
+
+\subsection{Planificacio i versions}
+
+Hem dividit la feina en tres iteracions de poc mes d'una setmana cadascuna:
+
+\begin{table}[H]
+\centering
+\caption{Iteracions principals del projecte.}
+\label{tab:iters}
+\begin{tabularx}{\linewidth}{lXl}
+\toprule
+\textbf{Iteracio} & \textbf{Contingut} & \textbf{Estat} \\
+\midrule
+1 -- Base
+& Setup Unity, scripts d'enemics, slime amb rastre i diseny de les
+sales basiques.
+& Tancada \\
+2 -- Mecaniques
+& Combat, vida, HUD, porta condicionada, monedes, audio, trampes
+avancades, suelo caient.
+& Tancada \\
+3 -- Polish
+& Pausa, transicions, ambient per seccio, musica de boss, pickup de
+cor, validadors i memoria.
+& En curs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La Taula~\ref{tab:iters} resumeix les iteracions. Cadascuna ha tancat amb
+una bateria automatitzada (\texttt{Tools/run\_validation.sh}) verda abans
+de fer \textit{merge} a la rama \texttt{develop}.
+
+\subsection{Repositori i seguiment}
+
+El codi viu a \url{https://github.com/carolina-rouj/VJ-3D}. Cada membre te
+una branca propia (\texttt{mateus}, \texttt{carol-...}) i fem
+\textit{pull request} cap a \texttt{develop} en cada fita. El historial
+de commits es fa servir com a registre temporal del treball.
+
+% ===== 4. Conclusions =====
+\section{Conclusions}
+
+Hem completat tots els requisits de la part basica i hem invertit temps
+addicional en \textit{game feel}: feedback continu, transicions suaus,
+ambient diferenciat per seccio, musica per al boss i estadistiques
+persistents. La separacio del codi en \texttt{DungeonGameRuntime} (estat,
+HUD i flow) i \texttt{LevelManager} (geometria) ha facilitat anyadir
+funcionalitats sense regressions, gracies a una bateria de smoke tests
+en Unity batchmode (\texttt{DungeonBatchValidator},
+\texttt{DungeonPauseSmoke}, etc.) que valida cada canvi.
+
+La principal dificultat ha estat la incompatibilitat de materials
+exportats des de MagicaVoxel amb el pipeline URP de Unity 6, resolta
+substituint en runtime els materials per equivalents URP-Lit. Tambe ha
+estat util la generacio procedural d'entitats: ens ha permes prototipar
+el joc sencer abans de tenir els assets finals.
+
+% ===== 5. Bibliografia =====
+\section{Bibliografia}
+
+\begin{itemize}
+    \item \textbf{Tinytouchtales -- Looty Dungeon}.
+    \url{https://www.tinytouchtales.com/looty-dungeon/}.
+    Web oficial del joc de referencia.
+
+    \item \textbf{Unity Manual -- Universal Render Pipeline}.
+    \url{https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@17.0/manual/index.html}.
+    Documentacio oficial de URP per a Unity 6, utilitzada per a la
+    configuracio de materials i llum.
+
+    \item \textbf{Unity Scripting API}.
+    \url{https://docs.unity3d.com/ScriptReference/}.
+    Referencia oficial dels metodes del motor utilitzats al codi.
+
+    \item \textbf{Disney -- Illusion of Life}.
+    \url{https://vimeo.com/93206523}.
+    Video sobre principis d'animacio que ens ha guiat la part de
+    \textit{game feel}.
+
+    \item \textbf{MagicaVoxel}.
+    \url{https://ephtracy.github.io/}.
+    Editor de models de voxels emprat per a generar els assets 3D.
+\end{itemize}
+
+\end{document}
