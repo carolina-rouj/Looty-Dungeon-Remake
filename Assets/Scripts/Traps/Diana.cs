@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class Diana : MonoBehaviour
 {
-    private Player player;
+    // TODO (player): private Player player;
 
     void Start()
     {
-        GameObject playerObj = GameObject.Find("Player");
-        if (playerObj != null) player = playerObj.GetComponent<player>();
+        // TODO (player): GameObject playerObj = GameObject.Find("Player");
+        // TODO (player): if (playerObj != null) player = playerObj.GetComponent<Player>();
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && player != null) player.isOnDiana = true; // Si el jugador pisa la diana
+        // TODO (player): if (other.CompareTag("Player") && player != null) player.isOnDiana = true;
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player") && player != null) player.isOnDiana = false; 
+        // TODO (player): if (other.CompareTag("Player") && player != null) player.isOnDiana = false;
     }
 }

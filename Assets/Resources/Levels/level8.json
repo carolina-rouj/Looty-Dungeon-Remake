@@ -2,6 +2,7 @@
     "name": "Nivel 8",
     "tamañoCasilla": 1.0,
     "grid": [
+        ".B...",
         "BBBBB",
         "BBBBB",
         "BBBBB",
@@ -10,13 +11,34 @@
         "BBBBB",
         "BBBBB",
         "BBBBB",
-        "BBBBB",
-        ".B..."
+        "BBBBB"
     ],
     "enemies": [
         { "type": "Wizard", "col": 3, "row": 3 },
         { "type": "Bat", "col": 5, "row": 5 }
     ],
     "traps": [],
+    "walls": [
+        { "col": 1, "row": 0, "rotation": 0  },
+        { "col": 0, "row": 1, "rotation": 90 },
+        { "col": 0, "row": 2, "rotation": 90 },
+        { "col": 0, "row": 3, "rotation": 90 },
+        { "col": 0, "row": 4, "rotation": 90 },
+        { "col": 0, "row": 5, "rotation": 90 },
+        { "col": 0, "row": 6, "rotation": 90 },
+        { "col": 0, "row": 7, "rotation": 90 },
+        { "col": 0, "row": 8, "rotation": 90 },
+        { "col": 0, "row": 9, "rotation": 90 }
+    ],
+    "decorations": [
+        { "type": "Cauldron",   "col": 2, "row": 7, "rotation": 0,   "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 0, "row": 7, "rotation": 0,   "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 4, "row": 7, "rotation": 180, "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 0, "row": 6, "rotation": 0,   "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 4, "row": 6, "rotation": 180, "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 0, "row": 5, "rotation": 0,   "yOffset": 0.5 },
+        { "type": "Bookshelf",  "col": 4, "row": 5, "rotation": 180, "yOffset": 0.5 },
+        { "type": "Carpet",     "col": 2, "row": 4, "rotation": 0,   "yOffset": 0.5 }
+    ],
     "fallingFloor": true
 }
