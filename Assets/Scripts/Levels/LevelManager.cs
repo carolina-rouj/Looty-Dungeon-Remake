@@ -24,12 +24,15 @@ public class LevelManager : MonoBehaviour
     public GameObject retractileForkPrefab;
 
     // paredes del nivel
-    public Material wallMaterial;
-    public GameObject wallBrokenPrefab;
+    public GameObject wallPlainPrefab;
+    public GameObject wallDoorPrefab;
+    public GameObject doorPrefab;
+    public Vector3 wallScale = Vector3.one;
 
     // decoraciones del nivel
     public GameObject thronePrefab;
     public GameObject floorTorchPrefab;
+    public GameObject floorTorchFirePrefab;
     public GameObject calizPrefab;
     public GameObject cauldronPrefab;
     public GameObject bookshelfPrefab;
@@ -114,6 +117,13 @@ public class LevelManager : MonoBehaviour
             if (go != null) Destroy(go);
 
         spawnedObjects.Clear();
+
+        foreach (var obj in FindObjectsByType<RastroSlime>(FindObjectsSortMode.None))
+            Destroy(obj.gameObject);
+
+        foreach (var obj in FindObjectsByType<Arrow>(FindObjectsSortMode.None))
+            Destroy(obj.gameObject);
+
         levelData = null;
         gridRows = 0;
         gridCols = 0;
@@ -190,7 +200,9 @@ public class LevelManager : MonoBehaviour
                 };
                 if (prefabToUse == null) continue;
 
-                GameObject tile = Instantiate(prefabToUse, GridToWorld(c, r), Quaternion.identity, transform);
+                Vector3 tilePos = GridToWorld(c, r);
+                tilePos.y = levelData.floorYOffset;
+                GameObject tile = Instantiate(prefabToUse, tilePos, Quaternion.identity, transform);
                 tile.layer = LayerMask.NameToLayer("Floor");
                 tile.name  = $"Tile_{c}_{r}";
 
@@ -201,38 +213,36 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    GameObject SpawnWallSegment(Vector3 pos, Quaternion rot)
-    {
-        GameObject w = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        w.transform.position = pos;
-        w.transform.rotation = rot;
-        w.transform.localScale = new Vector3(1f, 2f, 0.2f);
-        if (wallMaterial != null)
-            w.GetComponent<Renderer>().material = wallMaterial;
-        return w;
-    }
-
     void BuildWalls()
     {
         if (levelData.walls == null) return;
         foreach (var spawn in levelData.walls)
         {
             Vector3 pos = GridToWorld(spawn.col, spawn.row);
-            pos.y = 1f;
-            switch (spawn.rotation)
-            {
-                case 0:   pos.z -= 0.5f; break;
-                case 90:  pos.x -= 0.5f; break;
-                case 180: pos.z += 0.5f; break;
-                case 270: pos.x += 0.5f; break;
-            }
+            pos.y = 0f;
             Quaternion rot = Quaternion.Euler(0f, spawn.rotation, 0f);
-            bool isBroken = spawn.style == "Broken";
-            GameObject w = isBroken && wallBrokenPrefab != null
-                ? Instantiate(wallBrokenPrefab, pos, rot)
-                : SpawnWallSegment(pos, rot);
-            if (!tilesByRow.ContainsKey(spawn.row)) tilesByRow[spawn.row] = new List<GameObject>();
-            tilesByRow[spawn.row].Add(w);
+
+            bool isDoor = spawn.type == "Door";
+            GameObject wallPrefab = isDoor ? wallDoorPrefab : wallPlainPrefab;
+
+            if (wallPrefab == null)
+            {
+                Debug.LogWarning($"[LevelManager] Prefab de pared '{spawn.type}' no asignado.");
+                continue;
+            }
+
+            Vector3 scale = wallScale;
+            scale.z = spawn.width > 0f ? spawn.width * tamañoCasilla : wallScale.z;
+            GameObject w = Instantiate(wallPrefab, pos, rot);
+            w.transform.localScale = scale;
+            spawnedObjects.Add(w);
+
+            if (isDoor && doorPrefab != null)
+            {
+                GameObject door = Instantiate(doorPrefab, w.transform);
+                door.transform.localPosition = Vector3.zero;
+                door.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            }
         }
     }
 
@@ -282,10 +292,49 @@ public class LevelManager : MonoBehaviour
             Quaternion rot = Quaternion.Euler(0f, spawn.rotation, 0f);
             Vector3 pos = GridToWorld(spawn.col, spawn.row);
             pos.y = decorationSpawnHeight + spawn.yOffset;
-            spawnedObjects.Add(Instantiate(prefab, pos, rot));
+            GameObject decoration = Instantiate(prefab, pos, rot);
+            if (spawn.scale != 1f)
+                decoration.transform.localScale *= spawn.scale;
+            spawnedObjects.Add(decoration);
+
+            if (spawn.type == "FloorTorch" && floorTorchFirePrefab != null)
+            {
+                GameObject fire = Instantiate(floorTorchFirePrefab, decoration.transform);
+                // El prefab tiene escala (0.4,0.4,0.4). localPosition.y=0.9 coloca el fuego
+                // en la punta del modelo (0.9*0.4 = 0.36u en espacio mundo)
+                fire.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+                fire.transform.localRotation = Quaternion.identity;
+            }
+
+            if (spawn.type == "Cauldron" && floorTorchFirePrefab != null)
+            {
+                GameObject steam = Instantiate(floorTorchFirePrefab, decoration.transform);
+                steam.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+                steam.transform.localRotation = Quaternion.identity;
+                var fireCtrl = steam.GetComponent<YourNamespace.VFX_FireController>();
+                if (fireCtrl != null)
+                {
+                    fireCtrl.SetFireColor(new Color(0.85f, 0.95f, 1f));
+                    fireCtrl.SetFireIntensity(1.0f);
+                }
+            }
+
+            if (spawn.type == "Caliz" && floorTorchFirePrefab != null)
+            {
+                GameObject mana = Instantiate(floorTorchFirePrefab, decoration.transform);
+                mana.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+                mana.transform.localRotation = Quaternion.identity;
+                var fireCtrl = mana.GetComponent<YourNamespace.VFX_FireController>();
+                if (fireCtrl != null)
+                {
+                    fireCtrl.SetFireColor(new Color(0.2f, 0.5f, 1.0f));
+                    fireCtrl.SetFireIntensity(1.2f);
+                }
+            }
+
             if (!objectsByRow.ContainsKey(spawn.row))
                 objectsByRow[spawn.row] = new List<GameObject>();
-            objectsByRow[spawn.row].Add(spawnedObjects[spawnedObjects.Count - 1]);
+            objectsByRow[spawn.row].Add(decoration);
         }
     }
 
@@ -374,6 +423,9 @@ public class LevelManager : MonoBehaviour
         for (int i = 0; i < tiles.Count; i++)
             if (tiles[i] != null) origins[i] = tiles[i].transform.position;
 
+        for (int i = 0; i < tiles.Count; i++)
+            if (tiles[i] != null) SpawnDebris(origins[i], 1);
+
         while (elapsed < shakeDuration)
         {
             for (int i = 0; i < tiles.Count; i++)
@@ -387,17 +439,58 @@ public class LevelManager : MonoBehaviour
             yield return null;
         }
 
-        // caída física del bloque
+        // caída física descoordinada: cada bloque cae con retardo aleatorio
         for (int i = 0; i < tiles.Count; i++)
         {
-            GameObject tile = tiles[i];
-            if (tile == null) continue;
-            tile.transform.position = origins[i];
-            Collider col = tile.GetComponent<Collider>();
-            if (col) col.enabled = false;
-            Rigidbody rb = tile.AddComponent<Rigidbody>(); 
-            rb.useGravity = true;
-            Destroy(tile, 2f);
+            if (tiles[i] == null) continue;
+            StartCoroutine(FallTileDelayed(tiles[i], origins[i], Random.Range(0f, 0.6f)));
+        }
+    }
+
+    IEnumerator FallTileDelayed(GameObject tile, Vector3 origin, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (tile == null) yield break;
+        tile.transform.position = origin;
+        Collider col = tile.GetComponent<Collider>();
+        if (col) col.enabled = false;
+        SpawnDebris(origin);
+        Rigidbody rb = tile.AddComponent<Rigidbody>();
+        rb.useGravity = true;
+        Destroy(tile, 2f);
+    }
+
+    void SpawnDebris(Vector3 position, int count = -1)
+    {
+        if (count < 0) count = Random.Range(2, 4);
+        for (int i = 0; i < count; i++)
+        {
+            GameObject piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            float size = Random.Range(0.04f, 0.08f);
+            piece.transform.localScale = Vector3.one * size;
+            piece.transform.position = position + new Vector3(
+                Random.Range(-0.25f, 0.25f),
+                Random.Range(0.1f, 0.3f),
+                Random.Range(-0.25f, 0.25f));
+            piece.transform.rotation = Random.rotation;
+
+            var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            mat.SetColor("_BaseColor", new Color(
+                Random.Range(0.72f, 0.82f),
+                Random.Range(0.62f, 0.72f),
+                Random.Range(0.85f, 0.95f)));
+            piece.GetComponent<MeshRenderer>().sharedMaterial = mat;
+
+            Destroy(piece.GetComponent<BoxCollider>());
+
+            Rigidbody rb = piece.AddComponent<Rigidbody>();
+            rb.AddForce(new Vector3(
+                Random.Range(-1.5f, 1.5f),
+                Random.Range(0.5f, 1.5f),
+                Random.Range(-1.5f, 1.5f)), ForceMode.Impulse);
+            rb.AddTorque(Random.insideUnitSphere * 3f, ForceMode.Impulse);
+
+            Destroy(piece, 1.5f);
         }
     }
 

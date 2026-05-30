@@ -160,9 +160,23 @@ MonoBehaviour:
   gnomePrefab: {fileID: 1679084229916716241, guid: 2725767684cf41f69aa70065b2b25c4f, type: 3}
   bossPrefab: {fileID: 8107923519241200909, guid: 369fac574b4b42b185b0c74eb3ba4eab, type: 3}
   rastroSlimePrefab: {fileID: 4834583842880920505, guid: 1ea88906e64c4b90b864fb6ccfe82ec1, type: 3}
-  wallMaterial: {fileID: 2100000, guid: b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8, type: 2}
-  wallBrokenPrefab: {fileID: 4716283941527384029, guid: a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9, type: 3}
+  spiderWebsPrefab: {fileID: 0}
+  retractileForkPrefab: {fileID: 0}
+  wallPlainPrefab: {fileID: 430671460673478268, guid: 41a23889f61a369c39285995f449c151, type: 3}
+  wallDoorPrefab: {fileID: 3639119380977534797, guid: 0c1b943a7015ffdf69cd373dd14affe9, type: 3}
+  doorPrefab: {fileID: 3211107001200024193, guid: 1a70a6011ecb879ef8432b14ce7b9ff5, type: 3}
+  wallScale: {x: 1, y: 1, z: 1}
+  thronePrefab: {fileID: 2199217192974427126, guid: feef7005e63efd2408be8b487943596a, type: 3}
+  floorTorchPrefab: {fileID: 6734827051049198837, guid: 73cdff7be8d96a800a81bc76d346275b, type: 3}
+  floorTorchFirePrefab: {fileID: 8851461436730153582, guid: aa9300c048314dcd92786b6ab7919da4, type: 3}
+  calizPrefab: {fileID: 1070570148604954472, guid: 456e34e3c2ba2cd87bdb27ce7d25ef47, type: 3}
+  cauldronPrefab: {fileID: 5242084535348722431, guid: 29b42508546944b37a3b70e15ec7ebbf, type: 3}
+  bookshelfPrefab: {fileID: 6216054524893124666, guid: 07dbb232e0720488a97306627ff2f358, type: 3}
+  barrelPrefab: {fileID: 1971817902423924633, guid: 766387603bc1344ad8380a61144b2b8e, type: 3}
+  carpetPrefab: {fileID: 7731553344969696278, guid: e8f67a7ec8be24efd9547c809c619783, type: 3}
+  tapestryPrefab: {fileID: 4957558782399942639, guid: 03d48708033854ce9ab770f50432adb1, type: 3}
   enemySpawnHeight: 1
+  decorationSpawnHeight: 1
 --- !u!4 &667688023
 Transform:
   m_ObjectHideFlags: 0
