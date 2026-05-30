@@ -2,26 +2,21 @@
     "name": "Nivel Boss",
     "tamañoCasilla": 1.0,
     "grid": [
-        "DDDDDDD",
-        "D#####D",
-        "D#CCC#D",
-        "D#####D",
-        "D##D##D",
-        "D#####D",
-        "D#CCC#D",
-        "D#####D",
-        "DDDcDDD",
-        "...D..."
+        "DDDDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDCDD",
+        "DDcDD",
+        "DDDDD",
+        ".D..."
     ],
     "enemies": [
-        { "type": "Boss", "col": 3, "row": 5 },
-        { "type": "Slime", "col": 1, "row": 3 },
-        { "type": "Bat", "col": 5, "row": 3 }
+        { "type": "Boss", "col": 3, "row": 3 }
     ],
-    "traps": [
-        { "type": "Blade", "col": 3, "row": 4 },
-        { "type": "Flame", "col": 1, "row": 6 },
-        { "type": "Flame", "col": 5, "row": 6 }
-    ],
-    "fallingFloor": false
+    "traps": [],
+    "fallingFloor": true
 }
+

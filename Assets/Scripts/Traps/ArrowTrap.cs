@@ -12,22 +12,20 @@ public class ArrowTrap : MonoBehaviour
     public int distanceToDiana;
 
     public Transform diana;     
+    private Player player;
     private float timer = 0f;
 
     void Start()
     {
+        GameObject playerObj = GameObject.Find("Player");
+        if (playerObj != null) player = playerObj.GetComponent<Player>();
         if (diana != null) distanceToDiana = (int)Vector3.Distance(transform.position, diana.position);
         shootInterval = Mathf.Max(0.5f, distanceToDiana * 0.5f);
     }
 
     void Update()
     {
-        if (DungeonGameRuntime.Instance == null || !DungeonGameRuntime.Instance.IsPlaying)
-        {
-            return;
-        }
-
-        if (Diana.IsPlayerOnAnyDiana)
+        if (player != null && player.isOnDiana)
         {
             timer -= Time.deltaTime;
             if (timer <= 0f)
@@ -44,28 +42,12 @@ public class ArrowTrap : MonoBehaviour
 
     void Disparo()
     {
-        if (diana == null) return;
+        if (arrowPrefab == null || diana == null) return;
 
         Vector3 direction = (diana.position - transform.position).normalized;
         Quaternion rotation = Quaternion.LookRotation(direction);
 
-        GameObject arrow = arrowPrefab != null
-            ? Instantiate(arrowPrefab, transform.position, rotation)
-            : GameObject.CreatePrimitive(PrimitiveType.Capsule);
-
-        if (arrowPrefab == null)
-        {
-            arrow.name = "Arrow";
-            arrow.transform.position = transform.position;
-            arrow.transform.rotation = rotation;
-            arrow.transform.localScale = new Vector3(0.12f, 0.12f, 0.55f);
-            Collider collider = arrow.GetComponent<Collider>();
-            if (collider != null) collider.isTrigger = true;
-            Rigidbody body = arrow.AddComponent<Rigidbody>();
-            body.useGravity = false;
-            body.isKinematic = true;
-            arrow.AddComponent<Arrow>();
-        }
+        GameObject arrow = Instantiate(arrowPrefab, transform.position, rotation);
 
         Arrow arrowScript = arrow.GetComponent<Arrow>();
         if (arrowScript != null)

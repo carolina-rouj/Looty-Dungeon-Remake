@@ -51,7 +51,6 @@ ExportedObj/
 *.csproj
 *.unityproj
 *.sln
-*.slnx
 *.suo
 *.tmp
 *.user
@@ -63,7 +62,6 @@ ExportedObj/
 *.mdb
 *.opendb
 *.VC.db
-.vscode/
 
 # Unity3D generated meta files
 *.pidb.meta
@@ -111,8 +109,3 @@ InitTestScene*.unity*
 # Third-party asset packs
 /[Aa]ssets/VoxBox/
 /[Aa]ssets/VoxBox.meta
-Memoria/captures/
-Memoria/*.aux
-Memoria/*.log
-Memoria/*.out
-Memoria/*.toc

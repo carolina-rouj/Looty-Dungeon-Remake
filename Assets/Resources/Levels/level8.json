@@ -2,30 +2,21 @@
     "name": "Nivel 8",
     "tamañoCasilla": 1.0,
     "grid": [
-        "BBBBBBB",
-        "B#####B",
-        "B#CCC#B",
-        "B#####B",
-        "B##B##B",
-        "B#####B",
-        "B#CCC#B",
-        "B#####B",
-        "BBBcBBB",
-        "...B..."
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        "BBBBB",
+        ".B..."
     ],
     "enemies": [
-        { "type": "Wizard", "col": 1, "row": 3 },
-        { "type": "Bat", "col": 5, "row": 3 },
-        { "type": "Slime", "col": 3, "row": 5 },
-        { "type": "Gnome", "col": 2, "row": 7 },
-        { "type": "Gnome", "col": 4, "row": 7 }
+        { "type": "Wizard", "col": 3, "row": 3 },
+        { "type": "Bat", "col": 5, "row": 5 }
     ],
-    "traps": [
-        { "type": "Blade", "col": 3, "row": 4 },
-        { "type": "Flame", "col": 2, "row": 5 },
-        { "type": "Spikes", "col": 4, "row": 5 },
-        { "type": "SpiderWebs", "col": 3, "row": 2 },
-        { "type": "RetractileFork", "col": 3, "row": 6 }
-    ],
+    "traps": [],
     "fallingFloor": true
 }
