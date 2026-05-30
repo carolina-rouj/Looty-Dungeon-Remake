@@ -360,17 +360,39 @@ public class DungeonGameRuntime : MonoBehaviour
     // coordenadas de mundo (no relativas al transform del LevelManager).
     private Vector3 ComputePlayerSpawn(LevelManager manager)
     {
-        return new Vector3(0f, 0.7f, manager.MinBoundZ);
+        // Colocamos al jugador sobre un tile de suelo REAL del frente del nivel para que
+        // no aparezca en el vacio y caiga (lo que le drenaria la vida al instante).
+        Transform tile = FindFloorTileNear(manager, new Vector3(0f, 0f, manager.MinBoundZ));
+        if (tile != null) return tile.position + Vector3.up * 0.9f;
+        return new Vector3(0f, 0.9f, manager.MinBoundZ);
     }
 
     private Vector3 ComputeExitPosition(LevelManager manager)
     {
+        Transform tile = FindFloorTileNear(manager, new Vector3(0f, 0f, manager.MaxBoundZ));
+        if (tile != null) return tile.position + Vector3.up * 0.1f;
         return new Vector3(0f, 0.1f, manager.MaxBoundZ);
     }
 
     private Vector3 ComputeCameraFocus(LevelManager manager)
     {
         return new Vector3(0f, 0f, (manager.MinBoundZ + manager.MaxBoundZ) * 0.5f);
+    }
+
+    // Los tiles de suelo son hijos del LevelManager y estan en la capa "Floor"; devolvemos
+    // el mas cercano a una posicion de referencia (frente del nivel = spawn, fondo = salida).
+    private static Transform FindFloorTileNear(LevelManager manager, Vector3 reference)
+    {
+        int floorLayer = LayerMask.NameToLayer("Floor");
+        Transform best = null;
+        float bestSqr = float.MaxValue;
+        foreach (Transform child in manager.transform)
+        {
+            if (child.gameObject.layer != floorLayer) continue;
+            float sqr = (child.position - reference).sqrMagnitude;
+            if (sqr < bestSqr) { bestSqr = sqr; best = child; }
+        }
+        return best;
     }
 
     // El LevelManager de Carolina instancia sus propios prefabs de enemigos pero no
@@ -902,10 +924,10 @@ public class DungeonGameRuntime : MonoBehaviour
 
         if (State == DungeonState.Credits)
         {
-            Rect panel = DrawCenteredPanel(560f, 360f);
-            GUI.Label(PanelRect(panel, 90f, 22f, 380f, 60f), "Creditos", titleStyle);
-            GUI.Label(PanelRect(panel, 30f, 92f, 500f, 200f), "Proyecto VJ - FIB UPC\nCarolina Rouj y Mateus\nReferencia: Looty Dungeon\nArte low-poly procedural sobre assets del repositorio.\nMusica/SFX generados en runtime con tonos sintetizados.\nIluminacion y ambiente diferenciados por seccion.", bodyStyle);
-            if (GUI.Button(PanelCenteredRect(panel, 296f, 220f, 46f), "Volver", buttonStyle)) ShowMenu();
+            Rect panel = DrawCenteredPanel(600f, 440f);
+            GUI.Label(PanelRect(panel, 90f, 24f, 420f, 60f), "Creditos", titleStyle);
+            GUI.Label(PanelRect(panel, 40f, 96f, 520f, 250f), "Looty Dungeon 3D - Proyecto VJ (FIB - UPC)\n\nDesarrollado por:\nCarolina Rodriguez Ujano\nMateus Grandolfi Albuquerque\n\nProfesor tutor: Oscar Argudo Medrano\n\nReferencia: Looty Dungeon", bodyStyle);
+            if (GUI.Button(PanelCenteredRect(panel, 372f, 240f, 48f), "Volver", buttonStyle)) ShowMenu();
             return;
         }
 
@@ -962,7 +984,7 @@ public class DungeonGameRuntime : MonoBehaviour
         float labelWidth = Mathf.Max(190f * scale, Screen.width - labelX - menuWidth - margin * 2f);
         string timeText = FormatSeconds(RunSeconds);
         string enemiesText = aliveEnemies.Count > 0 ? "   Quedan: " + aliveEnemies.Count : "   Puerta abierta";
-        GUI.Label(new Rect(labelX, 16f * scale, labelWidth, 42f * scale), "Vida: " + Health + "/3   Monedas: " + Coins + "   Salas: " + RoomsCleared + "/10   Sala: " + (CurrentLevelIndex + 1) + "/10" + enemiesText + "   " + timeText, hudStyle);
+        GUI.Label(new Rect(labelX, 16f * scale, labelWidth, 42f * scale), "Monedas: " + Coins + "    Salas: " + RoomsCleared + "/10    Sala: " + (CurrentLevelIndex + 1) + "/10" + enemiesText + "    " + timeText, hudStyle);
         if (GUI.Button(new Rect(Screen.width - menuWidth - margin, 18f * scale, menuWidth, 36f * scale), "Menu", buttonStyle)) ShowMenu();
         DrawRoomProgressBar(scale);
         if (Time.time < messageUntil)
@@ -1200,7 +1222,7 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private float GetGuiScale()
     {
-        return Mathf.Clamp(Mathf.Min(Screen.width / 960f, Screen.height / 540f), 0.72f, 1.18f);
+        return Mathf.Clamp(Mathf.Min(Screen.width / 620f, Screen.height / 350f), 1.25f, 2.0f);
     }
 
     private bool ShouldRunStandaloneSmoke()
