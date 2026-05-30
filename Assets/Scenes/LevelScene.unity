@@ -155,10 +155,10 @@ MonoBehaviour:
   floorCarpetEnd: {fileID: 35179949632859763, guid: 836769b5096942a869f86289c9eca5ff, type: 3}
   floorCarpetContinue: {fileID: 4702588354379900793, guid: 3f5d5de38cc47bb98aca0afce03828c5, type: 3}
   slimePrefab: {fileID: 6096433856351486501, guid: 1a933bd56ed2dc435a308f76a0205e3c, type: 3}
-  batPrefab: {fileID: 0}
-  wizardPrefab: {fileID: 0}
-  gnomePrefab: {fileID: 0}
-  bossPrefab: {fileID: 0}
+  batPrefab: {fileID: 7737277535089464191, guid: 8577278bcf344489ba4855e5da200bac, type: 3}
+  wizardPrefab: {fileID: 7967196372087039667, guid: 586a9d7cb6f848a082db7fba06dc8671, type: 3}
+  gnomePrefab: {fileID: 1679084229916716241, guid: 2725767684cf41f69aa70065b2b25c4f, type: 3}
+  bossPrefab: {fileID: 8107923519241200909, guid: 369fac574b4b42b185b0c74eb3ba4eab, type: 3}
   rastroSlimePrefab: {fileID: 4834583842880920505, guid: 1ea88906e64c4b90b864fb6ccfe82ec1, type: 3}
   wallMaterial: {fileID: 2100000, guid: b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8, type: 2}
   wallBrokenPrefab: {fileID: 4716283941527384029, guid: a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9, type: 3}

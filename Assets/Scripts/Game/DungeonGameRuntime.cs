@@ -63,6 +63,7 @@ public class DungeonGameRuntime : MonoBehaviour
     private GUIStyle titleStyle;
     private GUIStyle bodyStyle;
     private GUIStyle hudStyle;
+    private GUIStyle heartStyle;
     private GUIStyle buttonStyle;
     private float guiScale = -1f;
     private float messageUntil;
@@ -174,7 +175,7 @@ public class DungeonGameRuntime : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.Return))
             {
-                LoadLevelIndex(CurrentLevelIndex, true);
+                StartNewGame();
             }
             else if (Input.GetKeyDown(KeyCode.M))
             {
@@ -317,6 +318,7 @@ public class DungeonGameRuntime : MonoBehaviour
             EnemyTouchDamage.Ensure(enemy);
             EnemyHitFeedback.Ensure(enemy);
             EnemyDeathWatcher.Ensure(enemy, this);
+            EnemyFloorFall.Ensure(enemy);
         }
     }
 
@@ -339,6 +341,7 @@ public class DungeonGameRuntime : MonoBehaviour
         // El suelo que cae lo gestiona el LevelManager de Carolina segun el flag
         // 'fallingFloor' de cada JSON, asi que aqui ya no lo disparamos.
         DiscoverEnemies();
+        ScatterCoins(manager);
         ApplySectionAmbience(CurrentLevelIndex);
         float duration = (CurrentLevelIndex == 0 || CurrentLevelIndex == 2 || CurrentLevelIndex == levelNames.Length - 1) ? 2.8f : 1.6f;
         ShowMessage(BuildRoomEnterMessage(CurrentLevelIndex), duration);
@@ -377,6 +380,26 @@ public class DungeonGameRuntime : MonoBehaviour
     private Vector3 ComputeCameraFocus(LevelManager manager)
     {
         return new Vector3(0f, 0f, (manager.MinBoundZ + manager.MaxBoundZ) * 0.5f);
+    }
+
+    // Coloca monedas sobre tiles de suelo aleatorios (de forma aditiva, sin tocar el JSON
+    // de Carolina). El jugador las recoge y suben el contador del HUD.
+    private void ScatterCoins(LevelManager manager)
+    {
+        int floorLayer = LayerMask.NameToLayer("Floor");
+        List<Transform> floors = new List<Transform>();
+        foreach (Transform child in manager.transform)
+        {
+            if (child.gameObject.layer == floorLayer) floors.Add(child);
+        }
+        if (floors.Count == 0) return;
+
+        int count = Mathf.Clamp(floors.Count / 5, 3, 9);
+        for (int i = 0; i < count; i++)
+        {
+            Transform tile = floors[Random.Range(0, floors.Count)];
+            CoinPickup.Create(manager.transform, tile.position + Vector3.up * 0.55f);
+        }
     }
 
     // Los tiles de suelo son hijos del LevelManager y estan en la capa "Floor"; devolvemos
@@ -794,10 +817,18 @@ public class DungeonGameRuntime : MonoBehaviour
         // LoadLevel y no hace callback, asi que disparamos nosotros el wiring posterior.
         // La guarda 'clearingLevel' evita que las destrucciones de enemigos del nivel
         // anterior (al limpiar) se cuenten como bajas.
-        clearingLevel = true;
-        levelManager.LoadLevel(levelNames[CurrentLevelIndex]);
-        clearingLevel = false;
-        NotifyLevelBuilt(levelManager);
+        // try/finally para que el wiring posterior SIEMPRE se ejecute: si LoadLevel
+        // fallara, sin esto el fade de transicion se quedaria en negro para siempre.
+        try
+        {
+            clearingLevel = true;
+            levelManager.LoadLevel(levelNames[CurrentLevelIndex]);
+        }
+        finally
+        {
+            clearingLevel = false;
+            NotifyLevelBuilt(levelManager);
+        }
     }
 
     private void CreatePlayer()
@@ -983,8 +1014,8 @@ public class DungeonGameRuntime : MonoBehaviour
         float margin = 18f * scale;
         float labelWidth = Mathf.Max(190f * scale, Screen.width - labelX - menuWidth - margin * 2f);
         string timeText = FormatSeconds(RunSeconds);
-        string enemiesText = aliveEnemies.Count > 0 ? "   Quedan: " + aliveEnemies.Count : "   Puerta abierta";
-        GUI.Label(new Rect(labelX, 16f * scale, labelWidth, 42f * scale), "Monedas: " + Coins + "    Salas: " + RoomsCleared + "/10    Sala: " + (CurrentLevelIndex + 1) + "/10" + enemiesText + "    " + timeText, hudStyle);
+        string enemiesText = aliveEnemies.Count > 0 ? "     Enemigos: " + aliveEnemies.Count : "     Puerta abierta";
+        GUI.Label(new Rect(labelX, 16f * scale, labelWidth, 42f * scale), "\u25C6 " + Coins + "     Salas " + RoomsCleared + "/10     Sala " + (CurrentLevelIndex + 1) + "/10" + enemiesText + "     " + timeText, hudStyle);
         if (GUI.Button(new Rect(Screen.width - menuWidth - margin, 18f * scale, menuWidth, 36f * scale), "Menu", buttonStyle)) ShowMenu();
         DrawRoomProgressBar(scale);
         if (Time.time < messageUntil)
@@ -1034,12 +1065,22 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private void DrawHealthPips()
     {
-        Color previous = GUI.color;
         float scale = GetGuiScale();
+        int target = Mathf.RoundToInt(34 * scale);
+        if (heartStyle == null || heartStyle.fontSize != target)
+        {
+            heartStyle = new GUIStyle
+            {
+                fontSize = target,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+        }
+        Color previous = GUI.color;
         for (int i = 0; i < 3; i++)
         {
-            GUI.color = i < Health ? new Color(0.95f, 0.05f, 0.08f, 1f) : new Color(0.22f, 0.05f, 0.06f, 0.85f);
-            GUI.DrawTexture(new Rect((22f + i * 30f) * scale, 24f * scale, 22f * scale, 22f * scale), Texture2D.whiteTexture);
+            GUI.color = i < Health ? new Color(0.97f, 0.18f, 0.22f) : new Color(0.34f, 0.10f, 0.12f);
+            GUI.Label(new Rect((14f + i * 34f) * scale, 6f * scale, 36f * scale, 42f * scale), "\u2665", heartStyle);
         }
         GUI.color = previous;
     }
@@ -1122,6 +1163,12 @@ public class DungeonGameRuntime : MonoBehaviour
         if (transitionFinishedAt < transitionStartedAt)
         {
             float elapsed = Time.time - transitionStartedAt;
+            // Salvavidas: si por lo que sea la carga no termina, no nos quedamos en negro.
+            if (elapsed > 1.5f)
+            {
+                transitionStartedAt = -1f;
+                return;
+            }
             alpha = Mathf.Clamp01(elapsed / fadeOutDuration);
         }
         else
@@ -1180,13 +1227,11 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private void DrawEndPanel(string title, string subtitle)
     {
-        Rect panel = DrawCenteredPanel(540f, 380f);
-        GUI.Label(PanelRect(panel, 50f, 18f, 440f, 60f), title, titleStyle);
-        GUI.Label(PanelRect(panel, 30f, 86f, 480f, 110f), subtitle, bodyStyle);
-        string hint = State == DungeonState.Victory ? "Enter o M: menu" : "R o Enter: reintentar  -  M: menu";
-        GUI.Label(PanelRect(panel, 30f, 202f, 480f, 36f), hint, bodyStyle);
-        if (GUI.Button(PanelCenteredRect(panel, 246f, 220f, 46f), "Reintentar", buttonStyle)) LoadLevelIndex(CurrentLevelIndex, true);
-        if (GUI.Button(PanelCenteredRect(panel, 304f, 220f, 46f), "Menu", buttonStyle)) ShowMenu();
+        Rect panel = DrawCenteredPanel(540f, 360f);
+        GUI.Label(PanelRect(panel, 50f, 22f, 440f, 60f), title, titleStyle);
+        GUI.Label(PanelRect(panel, 30f, 96f, 480f, 110f), subtitle, bodyStyle);
+        if (GUI.Button(PanelCenteredRect(panel, 226f, 240f, 48f), State == DungeonState.Victory ? "Jugar de nuevo" : "Reintentar", buttonStyle)) StartNewGame();
+        if (GUI.Button(PanelCenteredRect(panel, 288f, 240f, 48f), "Menu", buttonStyle)) ShowMenu();
     }
 
     private Rect DrawCenteredPanel(float width, float height)
