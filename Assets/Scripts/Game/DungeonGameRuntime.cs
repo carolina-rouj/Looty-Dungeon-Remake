@@ -78,7 +78,6 @@ public class DungeonGameRuntime : MonoBehaviour
     };
 
     private int coinsThisLevel;
-    private float levelStartedAtUnscaled;
     private bool timeBonusAwarded;
 
     private LevelManager levelManager;
@@ -382,7 +381,6 @@ public class DungeonGameRuntime : MonoBehaviour
 
         SetPlayerActive(true);
         coinsThisLevel = 0;
-        levelStartedAtUnscaled = Time.unscaledTime;
         timeBonusAwarded = false;
         Vector3 spawn = ComputePlayerSpawn(manager);
         player.ResetAt(spawn);
@@ -664,11 +662,12 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         LevelGoal g = levelGoals[Mathf.Clamp(index, 0, levelGoals.Length - 1)];
         bool boss = index == levelNames.Length - 1;
-        string obj = g.type == ObjectiveType.CollectCoins
-            ? "Recoge " + g.amount + " monedas"
-            : (boss ? "Derrota al boss" : "Derrota a todos los enemigos");
+        string obj = boss ? "Derrota al boss" : "Derrota a todos los enemigos";
+        string bonus = g.type == ObjectiveType.CollectCoins
+            ? "\nBonus: recoge " + g.amount + " monedas"
+            : "";
         string extra = index == 2 ? "\n¡El suelo empieza a caer!" : "";
-        return "Sala " + (index + 1) + "/10:  " + obj + "\nReto: menos de " + Mathf.RoundToInt(g.targetSeconds) + "s" + extra;
+        return "Sala " + (index + 1) + "/10:  " + obj + bonus + extra;
     }
 
     public void NotifyEnemyDefeated(GameObject enemy)
@@ -701,20 +700,36 @@ public class DungeonGameRuntime : MonoBehaviour
 
     public string ObjectiveDescription()
     {
-        LevelGoal g = CurrentGoal();
-        if (g.type == ObjectiveType.CollectCoins)
-        {
-            return "Recoge " + Mathf.Min(coinsThisLevel, g.amount) + "/" + g.amount + " monedas";
-        }
         bool boss = CurrentLevelIndex == levelNames.Length - 1;
         int total = Mathf.Max(levelEnemyTotal, 1);
         int killed = Mathf.Clamp(levelEnemyTotal - aliveEnemies.Count, 0, total);
-        return (boss ? "Derrota al boss " : "Derrota a los enemigos ") + killed + "/" + total;
+        string main = (boss ? "Derrota al boss " : "Derrota a los enemigos ") + killed + "/" + total;
+        LevelGoal g = CurrentGoal();
+        if (g.type == ObjectiveType.CollectCoins)
+        {
+            main += "    Bonus: recoge " + Mathf.Min(coinsThisLevel, g.amount) + "/" + g.amount + " monedas";
+        }
+        return main;
     }
 
     private void OpenDoorIfObjectiveMet()
     {
-        if (State != DungeonState.Playing || door == null || door.IsOpen || !IsObjectiveComplete())
+        if (State != DungeonState.Playing)
+        {
+            return;
+        }
+
+        if (!timeBonusAwarded && IsObjectiveComplete())
+        {
+            timeBonusAwarded = true;
+            Coins += 5;
+            coinsThisLevel += 5;
+            runtimeAudio.PlaySfx(RuntimeSfx.Coin);
+            Vector3 bonusAt = player != null ? player.transform.position : Vector3.zero;
+            RuntimeVfx.FloatingText(bonusAt + Vector3.up * 1.8f, "+5 OBJETIVO", new Color(0.4f, 1f, 0.5f));
+        }
+
+        if (door == null || door.IsOpen || aliveEnemies.Count != 0)
         {
             return;
         }
@@ -727,19 +742,7 @@ public class DungeonGameRuntime : MonoBehaviour
         RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 1.55f, "OPEN", new Color(1f, 0.78f, 0.08f));
 
         bool boss = CurrentLevelIndex == levelNames.Length - 1;
-        if (!timeBonusAwarded && Time.unscaledTime - levelStartedAtUnscaled <= CurrentGoal().targetSeconds)
-        {
-            timeBonusAwarded = true;
-            Coins += 3;
-            coinsThisLevel += 3;
-            runtimeAudio.PlaySfx(RuntimeSfx.Coin);
-            RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 2.0f, "+3 BONUS", new Color(0.4f, 1f, 0.5f));
-            ShowMessage((boss ? "¡Boss derrotado!" : "¡Objetivo cumplido!") + "  Bonus de tiempo +3", 2.4f);
-        }
-        else
-        {
-            ShowMessage(boss ? "¡Boss derrotado!  Cruza la puerta" : "¡Objetivo cumplido!  Puerta abierta", 2f);
-        }
+        ShowMessage(boss ? "¡Boss derrotado!  Cruza la puerta" : "¡Enemigos eliminados!  Puerta abierta", 2f);
     }
 
     public void DamagePlayer(int amount, Vector3 sourcePosition)
@@ -1159,8 +1162,8 @@ public class DungeonGameRuntime : MonoBehaviour
         if (GUI.Button(new Rect(bar.xMax - menuW - 8f * scale, bar.y + 7f * scale, menuW, barH - 14f * scale), "Men\u00FA", buttonStyle)) ShowMenu();
 
         // Linea de OBJETIVO de la sala (dorado), debajo de la barra.
-        string objText = aliveEnemies.Count == 0 && IsObjectiveComplete()
-            ? "\u00A1Objetivo cumplido!  Cruza la puerta"
+        string objText = aliveEnemies.Count == 0
+            ? "\u00A1Enemigos eliminados!  Cruza la puerta"
             : "Objetivo: " + ObjectiveDescription();
         Rect objRect = new Rect(margin + 4f * scale, bar.yMax + 6f * scale, Screen.width - margin * 2f - 8f * scale, 26f * scale);
         LabelShadow(objRect, objText, hudSubStyle);

@@ -304,33 +304,42 @@ apreciar l'estil voxel coherent en tot l'escenari.}
 
 \subsubsection{Entitats del joc}
 
-L'enunciat demana que cada entitat vagi acompanyada d'una imatge. La
-Taula~\ref{tab:entitats} llista totes les entitats i indica en quina figura
-d'aquesta memoria es poden veure; les figures~\ref{fig:level1},
-\ref{fig:traps}, \ref{fig:falling} i~\ref{fig:boss} contenen, en conjunt, totes
-les entitats del joc.
+A continuacio es mostra, individualment, cada entitat que apareix al joc. Els
+personatges (jugador i enemics) es generen per codi amb primitius i materials
+URP; la resta son models voxel. La Figura~\ref{fig:ent_chars} recull el jugador i
+els enemics, la Figura~\ref{fig:ent_deco} les decoracions i la
+Figura~\ref{fig:ent_traps} els elements de trampes, monedes i projectils.
 
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Entitats del joc i on apareixen a la memoria.}
-\label{tab:entitats}
-\begin{tabularx}{\linewidth}{lXl}
-\toprule
-\textbf{Entitat} & \textbf{Descripcio} & \textbf{Figura} \\
-\midrule
-Jugador & Heroi amb espasa; es mou casella a casella i ataca. & \ref{fig:level1} \\
-Slime & Enemic basic; salta per la sala i deixa rastre. & \ref{fig:level1} \\
-Gnome & Enemic; criatura petita amb pic. & \ref{fig:falling} \\
-Mag (Wizard) & Enemic a distancia; acompanya el boss. & \ref{fig:boss} \\
-Boss & Esquelet rei amb corona, escut i espasa. & \ref{fig:boss} \\
-Trampa de fletxes & Llancador + diana; dispara fletxes. & \ref{fig:traps} \\
-Forquilla retractil & Punxes laterals que fan dany. & \ref{fig:traps} \\
-Teranyina & Casella que alenteix el jugador. & \ref{fig:traps} \\
-Moneda & Recollible; suma al comptador del HUD. & \ref{fig:level1} \\
-Decoracions & Torxa, barril, prestatgeria, calder, catifa, tron, calze. & \ref{fig:traps} \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\includegraphics[width=\linewidth]{captures/entities_characters.png}
+\caption{Personatges del joc: el jugador (heroi amb espasa, es mou casella a
+casella), el \textit{slime} (enemic basic que salta i deixa rastre), el
+\textit{gnome}, el \textit{mag} (enemic que acompanya el boss) i el \textit{boss}
+final (esquelet rei amb corona, escut i espasa).}
+\label{fig:ent_chars}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{captures/entities_decorations.png}
+\caption{Decoracions de les sales (mes de 5 de diferents, sense comptar les
+parets): torxa, barril, prestatgeria, calder, catifa, tron i calze.}
+\label{fig:ent_deco}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{captures/entities_traps.png}
+\caption{Elements de trampes i recollibles: el llancador de fletxes i la seva
+diana, la fletxa, la forquilla retractil, la teranyina i la moneda.}
+\label{fig:ent_traps}
+\end{figure}
+
+Les figures~\ref{fig:ent_chars}, \ref{fig:ent_deco} i~\ref{fig:ent_traps}
+documenten visualment totes les entitats; cadascuna es comenta a la llegenda
+corresponent i es descriu amb mes detall a les seccions de funcionalitats i
+trampes anteriors.
 
 \subsubsection{Decoracions, monedes i interficie}
 
@@ -492,15 +501,43 @@ objectius per sala, ajustos de caiguda del terra i correccio de bugs. & Tancada 
 \end{tabularx}
 \end{table}
 
+Cada iteracio l'hem gestionada com un \textit{sprint} amb el seu backlog. La
+Taula~\ref{tab:backlog} mostra l'estat final del tauler de tasques, organitzat en
+les columnes \textit{forecast} (previst), \textit{to-do}, \textit{in-progress} i
+\textit{done}, tal com s'ha anat seguint durant el projecte.
+
+\begin{table}[H]
+\centering
+\caption{Tauler de sprints / backlog del projecte (estat final).}
+\label{tab:backlog}
+\begin{tabularx}{\linewidth}{XXXX}
+\toprule
+\textbf{Forecast} & \textbf{To-Do} & \textbf{In-Progress} & \textbf{Done} \\
+\midrule
+Leaderboard online; inventari d'objectes &
+(buit) &
+(buit) &
+Sales i geometria; enemics i boss; trampes; combat i vida; HUD i pantalles;
+audio; terra que cau; moviment casella a casella; objectius per sala; polish i
+correccio de bugs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 El codi viu al repositori \url{https://github.com/carolina-rouj/VJ-3D}. Cada
 membre treballa en branques propies (\texttt{mateus-*}, \texttt{carol-*}) i la
-integracio es fa amb \textit{pull requests} cap a la branca \texttt{develop},
-de manera que l'historial de commits i de PRs actua com a registre temporal de
-les fites obertes i tancades i dels punts tractats a les reunions setmanals.
+integracio es fa amb \textit{pull requests} cap a la branca \texttt{develop}, de
+manera que l'historial de commits i de PRs actua com a registre temporal de les
+fites obertes i tancades i dels punts tractats a les reunions setmanals. La
+Figura~\ref{fig:git} mostra un fragment d'aquest historial.
 
-% NOTA per al lliurament: l'enunciat valora captures REALS de la planificacio
-% (diagrama de Gantt, sprints amb backlog forecast/to-do/in-progress/done,
-% Trello/Slack i captures del git). Afegir aqui aquestes imatges abans d'entregar.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{captures/git_history.png}
+\caption{Fragment de l'historial de \textit{commits} del repositori, amb les
+aportacions dels dos membres de l'equip integrades a \texttt{develop}.}
+\label{fig:git}
+\end{figure}
 
 % ===== 4. Conclusions =====
 \section{Conclusions}

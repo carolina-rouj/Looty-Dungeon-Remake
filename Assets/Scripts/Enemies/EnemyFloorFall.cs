@@ -43,11 +43,13 @@ public class EnemyFloorFall : MonoBehaviour
     private void StartFalling()
     {
         falling = true;
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+        }
         foreach (MonoBehaviour behaviour in GetComponents<MonoBehaviour>())
         {
             if (behaviour == this) continue;
-            // StopAllCoroutines para que un salto en curso no pelee con el Rigidbody.
-            // enabled=false solo detiene Update, las corutinas siguen si no se paran.
             behaviour.StopAllCoroutines();
             behaviour.enabled = false;
         }
@@ -55,8 +57,6 @@ public class EnemyFloorFall : MonoBehaviour
         {
             col.enabled = false;
         }
-        // Reutiliza el Rigidbody si ya tuviera uno (no se puede añadir un segundo: daría null
-        // y un NullReferenceException al tocar useGravity).
         Rigidbody body = GetComponent<Rigidbody>();
         if (body == null) body = gameObject.AddComponent<Rigidbody>();
         body.isKinematic = false;
