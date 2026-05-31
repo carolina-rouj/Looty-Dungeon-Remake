@@ -28,7 +28,7 @@ public class RuntimeEnemySetup : MonoBehaviour
             case "Bat":    gameObject.AddComponent<Bat>();    break;
             case "Wizard": gameObject.AddComponent<Wizard>(); break;
             case "Gnome":  gameObject.AddComponent<Gnome>();  break;
-            case "Boss":   gameObject.AddComponent<Boss>();   break;
+            case "Boss":   gameObject.AddComponent<Boss>(); gameObject.AddComponent<BossController>(); break;
             case "Slime":  gameObject.AddComponent<Slime>();  break;
             default:       gameObject.AddComponent<Gnome>();  break;
         }

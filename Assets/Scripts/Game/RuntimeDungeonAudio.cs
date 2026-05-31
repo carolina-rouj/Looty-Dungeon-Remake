@@ -1,15 +1,21 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Audio 100% procedural (sin ficheros): sintetiza efectos y musica en runtime al estilo
+// chiptune/arcade del Looty Dungeon original (ondas cuadrada/triangular + ruido, con
+// envolventes y arpegios) en vez de simples pitidos sinusoidales.
 public class RuntimeDungeonAudio : MonoBehaviour
 {
+    private const int SampleRate = 44100;
+
     private AudioSource sfx;
     private AudioSource music;
     private Dictionary<RuntimeSfx, AudioClip> clips;
     private AudioClip menuLoop;
     private AudioClip gameLoop;
     private AudioClip bossLoop;
+
+    private enum Wave { Sine, Square, Triangle, Saw, Noise }
 
     private void Awake()
     {
@@ -20,50 +26,52 @@ public class RuntimeDungeonAudio : MonoBehaviour
         music = gameObject.AddComponent<AudioSource>();
         music.playOnAwake = false;
         music.loop = true;
-        music.volume = 0.18f;
+        music.volume = 0.16f;
 
         clips = new Dictionary<RuntimeSfx, AudioClip>
         {
-            { RuntimeSfx.Attack, Tone("Attack", 420f, 0.08f, 0.4f) },
-            { RuntimeSfx.Hit, Tone("Hit", 150f, 0.12f, 0.55f) },
-            { RuntimeSfx.Dash, Tone("Dash", 760f, 0.1f, 0.28f) },
-            { RuntimeSfx.Coin, Tone("Coin", 980f, 0.16f, 0.42f) },
-            { RuntimeSfx.Door, Tone("Door", 260f, 0.3f, 0.42f) },
-            { RuntimeSfx.PlayerDamage, Tone("Damage", 90f, 0.22f, 0.55f) },
-            { RuntimeSfx.Cast, Tone("Cast", 520f, 0.16f, 0.34f) },
-            { RuntimeSfx.Trap, Tone("Trap", 620f, 0.08f, 0.33f) },
-            { RuntimeSfx.FloorFall, Tone("FloorFall", 70f, 0.35f, 0.45f) },
-            { RuntimeSfx.GameOver, Tone("GameOver", 120f, 0.55f, 0.5f) },
-            { RuntimeSfx.Victory, Tone("Victory", 740f, 0.65f, 0.45f) }
+            // Golpe de espada: barrido de ruido descendente (whoosh).
+            { RuntimeSfx.Attack, Sweep("Attack", 1400f, 380f, 0.12f, 0.4f, Wave.Noise) },
+            // Impacto en enemigo: golpe seco (ruido corto + tono grave).
+            { RuntimeSfx.Hit, Thud("Hit", 0.13f, 0.6f) },
+            // Dash: whoosh ascendente.
+            { RuntimeSfx.Dash, Sweep("Dash", 300f, 1100f, 0.16f, 0.3f, Wave.Noise) },
+            // Moneda: arpegio brillante ascendente (el clasico "bling").
+            { RuntimeSfx.Coin, Arp("Coin", new[] { 988f, 1319f }, 0.07f, 0.42f, Wave.Square) },
+            // Puerta abierta: acorde ascendente suave.
+            { RuntimeSfx.Door, Arp("Door", new[] { 392f, 523f, 784f }, 0.1f, 0.4f, Wave.Triangle) },
+            // Daño al jugador: zumbido grave y aspero.
+            { RuntimeSfx.PlayerDamage, Buzz("Damage", 150f, 0.22f, 0.55f) },
+            // Hechizo: tono cristalino con vibrato.
+            { RuntimeSfx.Cast, Sweep("Cast", 660f, 990f, 0.18f, 0.32f, Wave.Square) },
+            // Trampa: chasquido metalico.
+            { RuntimeSfx.Trap, Thud("Trap", 0.08f, 0.45f) },
+            // Suelo que cae: retumbo grave.
+            { RuntimeSfx.FloorFall, Buzz("FloorFall", 70f, 0.4f, 0.5f) },
+            // Game over: arpegio descendente triste.
+            { RuntimeSfx.GameOver, Arp("GameOver", new[] { 523f, 415f, 330f, 247f }, 0.16f, 0.5f, Wave.Triangle) },
+            // Victoria: fanfarria ascendente.
+            { RuntimeSfx.Victory, Arp("Victory", new[] { 523f, 659f, 784f, 1047f }, 0.14f, 0.45f, Wave.Square) }
         };
-        menuLoop = Loop("MenuLoop", 160f, 6f, 0.12f);
-        gameLoop = Loop("GameLoop", 110f, 7f, 0.14f);
-        bossLoop = BossLoop("BossLoop", 78f, 7.6f, 0.16f);
+
+        // Bucles musicales (melodia chiptune + bajo).
+        menuLoop = MusicLoop("MenuLoop", new[] { 0, 4, 7, 4, 5, 9, 7, 4 }, 220f, 0.42f, 0.13f, Wave.Triangle, false);
+        gameLoop = MusicLoop("GameLoop", new[] { 0, 3, 7, 10, 7, 3, 5, 2 }, 196f, 0.34f, 0.14f, Wave.Square, false);
+        bossLoop = MusicLoop("BossLoop", new[] { 0, -1, 0, 3, 5, 3, 0, -2 }, 130f, 0.34f, 0.17f, Wave.Saw, true);
     }
 
     public void PlaySfx(RuntimeSfx sfxType)
     {
         if (clips.TryGetValue(sfxType, out AudioClip clip))
         {
-            sfx.pitch = Random.Range(0.96f, 1.04f);
+            sfx.pitch = Random.Range(0.97f, 1.03f);
             sfx.PlayOneShot(clip);
         }
     }
 
-    public void PlayMenuMusic()
-    {
-        PlayMusic(menuLoop);
-    }
-
-    public void PlayGameMusic()
-    {
-        PlayMusic(gameLoop);
-    }
-
-    public void PlayBossMusic()
-    {
-        PlayMusic(bossLoop);
-    }
+    public void PlayMenuMusic() => PlayMusic(menuLoop);
+    public void PlayGameMusic() => PlayMusic(gameLoop);
+    public void PlayBossMusic() => PlayMusic(bossLoop);
 
     private void PlayMusic(AudioClip clip)
     {
@@ -76,61 +84,131 @@ public class RuntimeDungeonAudio : MonoBehaviour
         music.Play();
     }
 
-    private static AudioClip Tone(string name, float frequency, float duration, float volume)
-    {
-        int sampleRate = 44100;
-        int samples = Mathf.CeilToInt(sampleRate * duration);
-        float[] data = new float[samples];
-        for (int i = 0; i < samples; i++)
-        {
-            float t = i / (float)sampleRate;
-            float envelope = 1f - t / duration;
-            data[i] = Mathf.Sin(2f * Mathf.PI * frequency * t) * volume * envelope;
-        }
+    // --- Sintesis ---
 
-        AudioClip clip = AudioClip.Create(name, samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
+    private static float Sample(Wave wave, float phase, ref float noiseState, ref int noiseHold)
+    {
+        switch (wave)
+        {
+            case Wave.Square:   return Mathf.Sin(phase) >= 0f ? 1f : -1f;
+            case Wave.Triangle: return Mathf.PingPong(phase / Mathf.PI, 2f) - 1f;
+            case Wave.Saw:      return 2f * (phase / (2f * Mathf.PI) - Mathf.Floor(0.5f + phase / (2f * Mathf.PI)));
+            case Wave.Noise:
+                if (noiseHold-- <= 0) { noiseState = Random.Range(-1f, 1f); noiseHold = 6; }
+                return noiseState;
+            default:            return Mathf.Sin(phase);
+        }
     }
 
-    private static AudioClip Loop(string name, float baseFrequency, float duration, float volume)
+    // Tono con barrido lineal de frecuencia (whoosh / efectos).
+    private static AudioClip Sweep(string name, float fStart, float fEnd, float duration, float volume, Wave wave)
     {
-        int sampleRate = 44100;
-        int samples = Mathf.CeilToInt(sampleRate * duration);
+        int samples = Mathf.CeilToInt(SampleRate * duration);
         float[] data = new float[samples];
-        float[] notes = { baseFrequency, baseFrequency * 1.33f, baseFrequency * 1.5f, baseFrequency * 1.33f };
-        float beat = duration / notes.Length;
+        float phase = 0f, noiseState = 0f; int noiseHold = 0;
         for (int i = 0; i < samples; i++)
         {
-            float t = i / (float)sampleRate;
-            int note = Mathf.FloorToInt(t / beat) % notes.Length;
-            data[i] = Mathf.Sin(2f * Mathf.PI * notes[note] * t) * volume;
+            float t = i / (float)samples;
+            float freq = Mathf.Lerp(fStart, fEnd, t);
+            phase += 2f * Mathf.PI * freq / SampleRate;
+            float env = Mathf.Sin(Mathf.PI * t);                       // ataque/caida suave
+            data[i] = Sample(wave, phase, ref noiseState, ref noiseHold) * volume * env;
         }
-
-        AudioClip clip = AudioClip.Create(name, samples, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        return clip;
+        return Make(name, data);
     }
 
-    private static AudioClip BossLoop(string name, float baseFrequency, float duration, float volume)
+    // Secuencia de notas (arpegio): coin, victoria, game over, puerta.
+    private static AudioClip Arp(string name, float[] freqs, float noteDuration, float volume, Wave wave)
     {
-        int sampleRate = 44100;
-        int samples = Mathf.CeilToInt(sampleRate * duration);
+        int notes = freqs.Length;
+        int perNote = Mathf.CeilToInt(SampleRate * noteDuration);
+        float[] data = new float[perNote * notes];
+        float noiseState = 0f; int noiseHold = 0;
+        for (int n = 0; n < notes; n++)
+        {
+            float phase = 0f;
+            for (int i = 0; i < perNote; i++)
+            {
+                float t = i / (float)perNote;
+                phase += 2f * Mathf.PI * freqs[n] / SampleRate;
+                float env = Mathf.Exp(-3.5f * t);                      // pluck con decaimiento
+                data[n * perNote + i] = Sample(wave, phase, ref noiseState, ref noiseHold) * volume * env;
+            }
+        }
+        return Make(name, data);
+    }
+
+    // Golpe seco: ruido corto mezclado con un tono grave (impactos / trampas).
+    private static AudioClip Thud(string name, float duration, float volume)
+    {
+        int samples = Mathf.CeilToInt(SampleRate * duration);
         float[] data = new float[samples];
-        float[] notes = { baseFrequency, baseFrequency * 0.94f, baseFrequency * 1.19f, baseFrequency * 0.84f, baseFrequency * 1.5f, baseFrequency * 0.94f };
-        float beat = duration / notes.Length;
+        float phase = 0f, noiseState = 0f; int noiseHold = 0;
         for (int i = 0; i < samples; i++)
         {
-            float t = i / (float)sampleRate;
-            int noteIndex = Mathf.FloorToInt(t / beat) % notes.Length;
-            float fundamental = Mathf.Sin(2f * Mathf.PI * notes[noteIndex] * t);
-            float fifth = 0.45f * Mathf.Sin(2f * Mathf.PI * notes[noteIndex] * 1.5f * t);
-            float drone = 0.35f * Mathf.Sin(2f * Mathf.PI * baseFrequency * 0.5f * t);
-            float pulse = 0.85f + 0.15f * Mathf.Sin(2f * Mathf.PI * 3.4f * t);
-            data[i] = (fundamental + fifth + drone) * volume * pulse * 0.55f;
+            float t = i / (float)samples;
+            phase += 2f * Mathf.PI * 160f / SampleRate;
+            float env = Mathf.Exp(-9f * t);
+            float tone = Mathf.Sin(phase);
+            float noise = Sample(Wave.Noise, phase, ref noiseState, ref noiseHold);
+            data[i] = (tone * 0.6f + noise * 0.4f) * volume * env;
         }
+        return Make(name, data);
+    }
 
-        AudioClip clip = AudioClip.Create(name, samples, 1, sampleRate, false);
+    // Zumbido grave aspero (daño, retumbo del suelo).
+    private static AudioClip Buzz(string name, float frequency, float duration, float volume)
+    {
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        float[] data = new float[samples];
+        float phase = 0f, noiseState = 0f; int noiseHold = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)samples;
+            phase += 2f * Mathf.PI * frequency / SampleRate;
+            float env = Mathf.Exp(-4f * t);
+            float square = Mathf.Sin(phase) >= 0f ? 1f : -1f;
+            float noise = Sample(Wave.Noise, phase, ref noiseState, ref noiseHold) * 0.3f;
+            data[i] = (square * 0.7f + noise) * volume * env;
+        }
+        return Make(name, data);
+    }
+
+    // Bucle musical: melodia (grados de escala menor) + bajo a la octava baja.
+    private static AudioClip MusicLoop(string name, int[] degrees, float rootFreq, float noteDuration, float volume, Wave wave, bool darkBass)
+    {
+        // Escala menor natural (semitonos): 0 2 3 5 7 8 10
+        int[] minorScale = { 0, 2, 3, 5, 7, 8, 10, 12 };
+        int perNote = Mathf.CeilToInt(SampleRate * noteDuration);
+        float[] data = new float[perNote * degrees.Length];
+        float bassPhase = 0f;
+        float noiseState = 0f; int noiseHold = 0;
+        for (int n = 0; n < degrees.Length; n++)
+        {
+            int degree = degrees[n];
+            int idx = ((degree % minorScale.Length) + minorScale.Length) % minorScale.Length;
+            int octave = Mathf.FloorToInt(degree / (float)minorScale.Length);
+            float semis = minorScale[idx] + 12 * octave;
+            float freq = rootFreq * Mathf.Pow(2f, semis / 12f);
+            float bassFreq = rootFreq * 0.5f * Mathf.Pow(2f, minorScale[idx] / 12f) * (darkBass ? 0.5f : 1f);
+            float melodyPhase = 0f;
+            for (int i = 0; i < perNote; i++)
+            {
+                float t = i / (float)perNote;
+                melodyPhase += 2f * Mathf.PI * freq / SampleRate;
+                bassPhase += 2f * Mathf.PI * bassFreq / SampleRate;
+                float env = Mathf.Min(1f, t * 12f) * Mathf.Exp(-1.6f * t);  // pequeño ataque + decaimiento
+                float mel = Sample(wave, melodyPhase, ref noiseState, ref noiseHold) * env;
+                float bass = (Mathf.Sin(bassPhase) >= 0f ? 1f : -1f) * 0.5f;
+                data[n * perNote + i] = (mel * 0.7f + bass * 0.3f) * volume;
+            }
+        }
+        return Make(name, data);
+    }
+
+    private static AudioClip Make(string name, float[] data)
+    {
+        AudioClip clip = AudioClip.Create(name, data.Length, 1, SampleRate, false);
         clip.SetData(data, 0);
         return clip;
     }
@@ -150,4 +228,3 @@ public enum RuntimeSfx
     GameOver,
     Victory
 }
-

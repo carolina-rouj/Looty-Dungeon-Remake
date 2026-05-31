@@ -21,7 +21,7 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && Time.time >= nextAttackTime)
+        if (DungeonInput.AttackPressed() && Time.time >= nextAttackTime)
         {
             Attack();
         }

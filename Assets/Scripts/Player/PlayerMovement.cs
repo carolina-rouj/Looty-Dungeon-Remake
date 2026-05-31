@@ -64,7 +64,7 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Facing), 16f * Time.deltaTime);
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+        if (DungeonInput.DashPressed())
         {
             TryDash(input.sqrMagnitude > 0.01f ? input : Facing);
         }
@@ -133,15 +133,7 @@ public class PlayerMovement : MonoBehaviour
 
     private static Vector3 ReadMovement()
     {
-        float x = 0f;
-        float z = 0f;
-
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) x -= 1f;
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) x += 1f;
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) z -= 1f;
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) z += 1f;
-
-        return new Vector3(x, 0f, z);
+        return new Vector3(DungeonInput.Horizontal(), 0f, DungeonInput.Vertical());
     }
 }
 

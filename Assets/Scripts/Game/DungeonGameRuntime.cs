@@ -53,6 +53,39 @@ public class DungeonGameRuntime : MonoBehaviour
         "final_level"
     };
 
+    // --- Objetivos por sala ---------------------------------------------------------
+    // Cada sala tiene un OBJETIVO que hay que cumplir para que se abra la puerta (regla a
+    // explorar + objetivo a conseguir, como exige el enunciado), mas un RETO de tiempo
+    // opcional que da monedas extra. La puerta solo abre cuando el objetivo esta cumplido.
+    private enum ObjectiveType { KillAll, CollectCoins }
+
+    private struct LevelGoal
+    {
+        public ObjectiveType type;
+        public int amount;          // monedas a recoger (si CollectCoins)
+        public float targetSeconds; // reto de tiempo (bonus si terminas por debajo)
+        public LevelGoal(ObjectiveType t, int a, float s) { type = t; amount = a; targetSeconds = s; }
+    }
+
+    // Indexado por sala (0..9). Mezcla de "mata a todos" y "recoge X monedas".
+    private readonly LevelGoal[] levelGoals =
+    {
+        new LevelGoal(ObjectiveType.KillAll,      0, 25f), // 1
+        new LevelGoal(ObjectiveType.KillAll,      0, 25f), // 2
+        new LevelGoal(ObjectiveType.CollectCoins, 3, 30f), // 3
+        new LevelGoal(ObjectiveType.KillAll,      0, 30f), // 4
+        new LevelGoal(ObjectiveType.KillAll,      0, 35f), // 5
+        new LevelGoal(ObjectiveType.CollectCoins, 3, 30f), // 6
+        new LevelGoal(ObjectiveType.KillAll,      0, 40f), // 7
+        new LevelGoal(ObjectiveType.KillAll,      0, 35f), // 8
+        new LevelGoal(ObjectiveType.CollectCoins, 4, 45f), // 9
+        new LevelGoal(ObjectiveType.KillAll,      0, 70f), // 10 (boss)
+    };
+
+    private int coinsThisLevel;
+    private float levelStartedAtUnscaled;
+    private bool timeBonusAwarded;
+
     private LevelManager levelManager;
     private PlayerMovement player;
     private PlayerHealth playerHealth;
@@ -63,9 +96,23 @@ public class DungeonGameRuntime : MonoBehaviour
     private GUIStyle titleStyle;
     private GUIStyle bodyStyle;
     private GUIStyle hudStyle;
+    private GUIStyle hudSubStyle;
     private GUIStyle heartStyle;
     private GUIStyle buttonStyle;
+    private GUIStyle panelStyle;
     private float guiScale = -1f;
+
+    // --- Tema visual del HUD / pantallas (estilo mazmorra Looty) ---
+    private static readonly Color UiText   = new Color(0.97f, 0.94f, 0.87f);
+    private static readonly Color UiSub    = new Color(0.80f, 0.74f, 0.64f);
+    private static readonly Color UiAccent = new Color(1f, 0.82f, 0.30f);   // dorado
+    private static readonly Color UiShadow = new Color(0f, 0f, 0f, 0.75f);
+    private Texture2D texPanel;
+    private Texture2D texBtn;
+    private Texture2D texBtnHover;
+    private Texture2D texBtnActive;
+    private Font uiFont;
+    private bool uiFontTried;
     private float messageUntil;
     private string message = "";
     private float transitionLockUntil;
@@ -79,6 +126,7 @@ public class DungeonGameRuntime : MonoBehaviour
     private float sectionBannerUntil;
     private string sectionBanner = "";
     private int lastBannerSection = -1;
+    private int levelEnemyTotal;
     private float transitionStartedAt = -1f;
     private float transitionFinishedAt;
 
@@ -133,7 +181,7 @@ public class DungeonGameRuntime : MonoBehaviour
             RunSeconds += Time.unscaledDeltaTime;
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (DungeonInput.Escape())
         {
             if (State == DungeonState.Playing)
             {
@@ -151,59 +199,56 @@ public class DungeonGameRuntime : MonoBehaviour
 
         if (State == DungeonState.Menu)
         {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+            if (DungeonInput.Confirm())
             {
                 StartNewGame();
             }
-            else if (Input.GetKeyDown(KeyCode.C))
+            else if (DungeonInput.Credits())
             {
                 ShowCredits();
             }
         }
         else if (State == DungeonState.Paused)
         {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.P))
+            if (DungeonInput.Submit() || DungeonInput.Pause())
             {
                 Resume();
             }
-            else if (Input.GetKeyDown(KeyCode.M))
+            else if (DungeonInput.Menu())
             {
                 ShowMenu();
             }
         }
         else if (State == DungeonState.GameOver)
         {
-            if (Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.Return))
+            if (DungeonInput.Restart() || DungeonInput.Submit())
             {
                 StartNewGame();
             }
-            else if (Input.GetKeyDown(KeyCode.M))
+            else if (DungeonInput.Menu())
             {
                 ShowMenu();
             }
         }
         else if (State == DungeonState.Victory)
         {
-            if (Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.Return))
+            if (DungeonInput.Menu() || DungeonInput.Submit())
             {
                 ShowMenu();
             }
         }
         else if (State == DungeonState.Playing)
         {
-            if (Input.GetKeyDown(KeyCode.P))
+            if (DungeonInput.Pause())
             {
                 Pause();
             }
         }
 
-        for (int i = 0; i < levelNames.Length; i++)
+        int levelKey = DungeonInput.LevelKeyPressed();
+        if (levelKey >= 0 && levelKey < levelNames.Length)
         {
-            if (WasLevelKeyPressed(i))
-            {
-                JumpToLevel(i);
-                break;
-            }
+            JumpToLevel(levelKey);
         }
     }
 
@@ -318,7 +363,12 @@ public class DungeonGameRuntime : MonoBehaviour
             EnemyTouchDamage.Ensure(enemy);
             EnemyHitFeedback.Ensure(enemy);
             EnemyDeathWatcher.Ensure(enemy, this);
-            EnemyFloorFall.Ensure(enemy);
+            // El boss NO debe caerse por el suelo (en su sala el suelo cae): lo mantiene
+            // firme su BossController. Al resto si les ponemos la caida con el suelo.
+            if (enemy.GetComponent<Boss>() == null)
+            {
+                EnemyFloorFall.Ensure(enemy);
+            }
         }
     }
 
@@ -333,14 +383,21 @@ public class DungeonGameRuntime : MonoBehaviour
         }
 
         SetPlayerActive(true);
+        coinsThisLevel = 0;
+        levelStartedAtUnscaled = Time.unscaledTime;
+        timeBonusAwarded = false;
         Vector3 spawn = ComputePlayerSpawn(manager);
         player.ResetAt(spawn);
         playerHealth.RefreshVisuals();
-        cameraFollow.SetStaticFocus(ComputeCameraFocus(manager));
+        // Camara con seguimiento LEVE del player, acotada a la sala.
+        Vector3 roomMin = new Vector3(-manager.MaxBoundX, 0f, manager.MinBoundZ);
+        Vector3 roomMax = new Vector3(manager.MaxBoundX, 0f, manager.MaxBoundZ);
+        cameraFollow.SetSoftFollow(player.transform, ComputeCameraFocus(manager), roomMin, roomMax, 0.55f);
         CreateDoor(ComputeExitPosition(manager));
         // El suelo que cae lo gestiona el LevelManager de Carolina segun el flag
         // 'fallingFloor' de cada JSON, asi que aqui ya no lo disparamos.
         DiscoverEnemies();
+        levelEnemyTotal = aliveEnemies.Count;
         ScatterCoins(manager);
         ApplySectionAmbience(CurrentLevelIndex);
         float duration = (CurrentLevelIndex == 0 || CurrentLevelIndex == 2 || CurrentLevelIndex == levelNames.Length - 1) ? 2.8f : 1.6f;
@@ -395,10 +452,23 @@ public class DungeonGameRuntime : MonoBehaviour
         if (floors.Count == 0) return;
 
         int count = Mathf.Clamp(floors.Count / 5, 3, 9);
-        for (int i = 0; i < count; i++)
+        // Si el objetivo de la sala es recoger monedas, garantiza que haya suficientes
+        // (con margen) para poder cumplirlo.
+        LevelGoal goal = CurrentGoal();
+        if (goal.type == ObjectiveType.CollectCoins)
+        {
+            count = Mathf.Min(floors.Count, Mathf.Max(count, goal.amount + 2));
+        }
+        // Reparte sin repetir tile, asi no se apilan dos monedas en la misma casilla.
+        HashSet<Transform> used = new HashSet<Transform>();
+        int safety = 0;
+        while (used.Count < count && safety++ < count * 6)
         {
             Transform tile = floors[Random.Range(0, floors.Count)];
-            CoinPickup.Create(manager.transform, tile.position + Vector3.up * 0.55f);
+            if (!used.Add(tile)) continue;
+            // La moneda se cuelga del tile: cuando el tile se cae (suelo que cae de
+            // Carolina), la moneda cae con el; cuando el tile se destruye, la moneda tambien.
+            CoinPickup.Create(tile);
         }
     }
 
@@ -428,8 +498,25 @@ public class DungeonGameRuntime : MonoBehaviour
         {
             if (enemy != null)
             {
+                GroundToFloor(enemy.gameObject);
                 RegisterEnemy(enemy.gameObject);
             }
+        }
+    }
+
+    // Apoya al enemigo sobre la superficie real del suelo. El LevelManager los spawnea a
+    // una altura fija (enemySpawnHeight = 1) que queda por encima del suelo y los hacia
+    // flotar; con un raycast a la capa "Floor" los bajamos a ras de suelo. Se hace antes de
+    // que corra el Start del enemigo (que fija su Y de referencia), por lo que persiste.
+    private static void GroundToFloor(GameObject enemy)
+    {
+        int floorMask = LayerMask.GetMask("Floor");
+        Vector3 from = enemy.transform.position + Vector3.up * 4f;
+        if (Physics.Raycast(from, Vector3.down, out RaycastHit hit, 10f, floorMask))
+        {
+            Vector3 p = enemy.transform.position;
+            p.y = hit.point.y;
+            enemy.transform.position = p;
         }
     }
 
@@ -579,19 +666,13 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private string BuildRoomEnterMessage(int index)
     {
-        if (index == 0)
-        {
-            return "Sala 1 - Mata enemigos para abrir la puerta";
-        }
-        if (index == 2)
-        {
-            return "Sala 3 - El suelo empezara a caer";
-        }
-        if (index == levelNames.Length - 1)
-        {
-            return "Sala Boss - Aguanta y golpea";
-        }
-        return "Sala " + (index + 1);
+        LevelGoal g = levelGoals[Mathf.Clamp(index, 0, levelGoals.Length - 1)];
+        bool boss = index == levelNames.Length - 1;
+        string obj = g.type == ObjectiveType.CollectCoins
+            ? "Recoge " + g.amount + " monedas"
+            : (boss ? "Derrota al boss" : "Derrota a todos los enemigos");
+        string extra = index == 2 ? "  ·  ¡el suelo empieza a caer!" : "";
+        return "Sala " + (index + 1) + "/10  —  " + obj + "  (reto: <" + Mathf.RoundToInt(g.targetSeconds) + "s)" + extra;
     }
 
     public void NotifyEnemyDefeated(GameObject enemy)
@@ -605,13 +686,63 @@ public class DungeonGameRuntime : MonoBehaviour
             }
         }
 
-        if (State == DungeonState.Playing && aliveEnemies.Count == 0 && door != null && !door.IsOpen)
+        OpenDoorIfObjectiveMet();
+    }
+
+    // --- Objetivos -----------------------------------------------------------------
+    private LevelGoal CurrentGoal()
+    {
+        return levelGoals[Mathf.Clamp(CurrentLevelIndex, 0, levelGoals.Length - 1)];
+    }
+
+    private bool IsObjectiveComplete()
+    {
+        LevelGoal g = CurrentGoal();
+        return g.type == ObjectiveType.KillAll
+            ? aliveEnemies.Count == 0
+            : coinsThisLevel >= g.amount;
+    }
+
+    public string ObjectiveDescription()
+    {
+        LevelGoal g = CurrentGoal();
+        if (g.type == ObjectiveType.CollectCoins)
         {
-            door.Open();
-            runtimeAudio.PlaySfx(RuntimeSfx.Door);
-            RuntimeVfx.Burst(door.transform.position + Vector3.up, Color.yellow, 28, 0.7f);
-            RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 1.55f, "OPEN", new Color(1f, 0.78f, 0.08f));
-            ShowMessage(CurrentLevelIndex == levelNames.Length - 1 ? "Boss derrotado" : "Puerta abierta");
+            return "Recoge " + Mathf.Min(coinsThisLevel, g.amount) + "/" + g.amount + " monedas";
+        }
+        bool boss = CurrentLevelIndex == levelNames.Length - 1;
+        int total = Mathf.Max(levelEnemyTotal, 1);
+        int killed = Mathf.Clamp(levelEnemyTotal - aliveEnemies.Count, 0, total);
+        return (boss ? "Derrota al boss " : "Derrota a los enemigos ") + killed + "/" + total;
+    }
+
+    // Abre la puerta SOLO cuando el objetivo de la sala se cumple. Se llama al matar un
+    // enemigo y al recoger una moneda.
+    private void OpenDoorIfObjectiveMet()
+    {
+        if (State != DungeonState.Playing || door == null || door.IsOpen || !IsObjectiveComplete())
+        {
+            return;
+        }
+
+        door.Open();
+        runtimeAudio.PlaySfx(RuntimeSfx.Door);
+        RuntimeVfx.Burst(door.transform.position + Vector3.up, Color.yellow, 28, 0.7f);
+        RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 1.55f, "OPEN", new Color(1f, 0.78f, 0.08f));
+
+        bool boss = CurrentLevelIndex == levelNames.Length - 1;
+        if (!timeBonusAwarded && Time.unscaledTime - levelStartedAtUnscaled <= CurrentGoal().targetSeconds)
+        {
+            timeBonusAwarded = true;
+            Coins += 3;
+            coinsThisLevel += 3;
+            runtimeAudio.PlaySfx(RuntimeSfx.Coin);
+            RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 2.0f, "+3 BONUS", new Color(0.4f, 1f, 0.5f));
+            ShowMessage((boss ? "¡Boss derrotado!" : "¡Objetivo cumplido!") + "  Bonus de tiempo +3", 2.4f);
+        }
+        else
+        {
+            ShowMessage(boss ? "¡Boss derrotado!  Cruza la puerta" : "¡Objetivo cumplido!  Puerta abierta", 2f);
         }
     }
 
@@ -648,9 +779,11 @@ public class DungeonGameRuntime : MonoBehaviour
     public void AddCoin(Vector3 position)
     {
         Coins++;
+        coinsThisLevel++;
         runtimeAudio.PlaySfx(RuntimeSfx.Coin);
         RuntimeVfx.Burst(position, Color.yellow, 12, 0.4f);
         RuntimeVfx.FloatingText(position + Vector3.up * 0.45f, "+1", new Color(1f, 0.82f, 0.08f));
+        OpenDoorIfObjectiveMet();
     }
 
     public void AddHealth(Vector3 position)
@@ -895,7 +1028,8 @@ public class DungeonGameRuntime : MonoBehaviour
         }
 
         camera.orthographic = true;
-        camera.orthographicSize = 6.2f;
+        // Mas zoom (antes 6.2) para acercar la accion al estilo del Looty Dungeon oficial.
+        camera.orthographicSize = 4.7f;
         camera.transform.rotation = Quaternion.Euler(58f, -38f, 0f);
         camera.backgroundColor = new Color(0.18f, 0.08f, 0.08f);
         camera.clearFlags = CameraClearFlags.SolidColor;
@@ -916,6 +1050,9 @@ public class DungeonGameRuntime : MonoBehaviour
             Destroy(door.gameObject);
         }
 
+        // Compuerta FUNCIONAL: cubo que bloquea hasta matar a los enemigos y luego se vuelve
+        // trigger para pasar de sala. Sirve de "gate" en todos los niveles (tambien los de
+        // Carolina). Su visual se sustituye por la puerta real de Carolina cuando se puede.
         GameObject doorObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         doorObject.name = "Exit Door";
         doorObject.transform.position = position + Vector3.up * 0.75f;
@@ -925,14 +1062,75 @@ public class DungeonGameRuntime : MonoBehaviour
             doorObject.transform.SetParent(levelManager.transform, true);
         }
 
+        // En MIS niveles (indices pares: level1/3/5/7/9) no hay puerta en el JSON, asi que
+        // montamos la puerta de Carolina (marco wallDoor + hoja door) como visual sobre la
+        // compuerta. En SUS niveles la puerta ya la pone su JSON, no la duplicamos.
+        bool isMyLevel = (CurrentLevelIndex % 2 == 0);
+        if (isMyLevel)
+        {
+            AddExitLanding(position);
+        }
+        bool visualPresent = isMyLevel ? TryAttachDoorVisual(doorObject.transform, position) : true;
+        if (visualPresent)
+        {
+            Renderer gateRenderer = doorObject.GetComponent<Renderer>();
+            if (gateRenderer != null) gateRenderer.enabled = false;   // la compuerta queda invisible
+        }
+
         door = doorObject.AddComponent<DungeonDoor>();
     }
 
-    private static bool WasLevelKeyPressed(int levelIndex)
+    // Instancia la puerta de Carolina (marco + hoja) en la salida, mirando hacia la sala,
+    // sin colliders. Devuelve true si al menos pudo poner el marco.
+    private bool TryAttachDoorVisual(Transform gate, Vector3 exitPosition)
     {
-        KeyCode alpha = KeyCode.Alpha0 + levelIndex;
-        KeyCode keypad = KeyCode.Keypad0 + levelIndex;
-        return Input.GetKeyDown(alpha) || Input.GetKeyDown(keypad);
+        if (levelManager == null) return false;
+
+        GameObject framePrefab = levelManager.wallDoorPrefab;
+        GameObject leafPrefab = levelManager.doorPrefab;
+        if (framePrefab == null && leafPrefab == null) return false;
+
+        // Suelo de la salida (la compuerta esta 0.75 por encima; el marco va a ras de suelo).
+        Vector3 groundPos = new Vector3(exitPosition.x, 0f, exitPosition.z);
+        // 180 = pared del fondo mirando a la sala, igual que las paredes traseras impares.
+        Quaternion rot = Quaternion.Euler(0f, 180f, 0f);
+
+        if (framePrefab != null)
+        {
+            GameObject frame = Instantiate(framePrefab, groundPos, rot, gate);
+            StripColliders(frame);
+        }
+        if (leafPrefab != null)
+        {
+            GameObject leaf = Instantiate(leafPrefab, groundPos, rot, gate);
+            StripColliders(leaf);
+        }
+        return framePrefab != null;
+    }
+
+    // En MIS niveles, entre la ultima fila de suelo y la puerta habia un hueco donde el
+    // jugador caia (perdiendo una vida) al ir a cruzar la puerta. Anadimos una plataforma
+    // de suelo INVISIBLE (capa "Floor") en la zona de salida para que el camino hasta y a
+    // traves de la puerta sea solido. (Los niveles de Carolina ya lo tienen resuelto.)
+    private void AddExitLanding(Vector3 exitPosition)
+    {
+        GameObject landing = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        landing.name = "Exit Landing";
+        // Top de la plataforma a y=0.5 (igual que el suelo): cubo escala 1 centrado en y=0.
+        landing.transform.position = new Vector3(exitPosition.x, 0f, exitPosition.z + 0.5f);
+        landing.transform.localScale = new Vector3(3f, 1f, 2f);
+        landing.layer = LayerMask.NameToLayer("Floor");
+        Renderer r = landing.GetComponent<Renderer>();
+        if (r != null) r.enabled = false;   // invisible: solo evita la caida
+        if (levelManager != null) landing.transform.SetParent(levelManager.transform, true);
+    }
+
+    private static void StripColliders(GameObject go)
+    {
+        foreach (Collider c in go.GetComponentsInChildren<Collider>(true))
+        {
+            Destroy(c);
+        }
     }
 
     private void OnGUI()
@@ -942,7 +1140,7 @@ public class DungeonGameRuntime : MonoBehaviour
         if (State == DungeonState.Menu)
         {
             Rect panel = DrawCenteredPanel(540f, 400f);
-            GUI.Label(PanelRect(panel, 20f, 20f, 500f, 70f), "Looty Dungeon 3D", titleStyle);
+            LabelShadow(PanelRect(panel, 20f, 20f, 500f, 70f), "Looty Dungeon 3D", titleStyle);
             GUI.Label(PanelRect(panel, 28f, 92f, 484f, 108f), "WASD/flechas para moverte.  Shift: dash.  Espacio o click: atacar.\nP o Esc: pausa.  0-9: saltar a salas.", bodyStyle);
             string bestLine = (BestCoins > 0 || BestVictorySeconds > 0f)
                 ? "Mejor partida: " + BestCoins + " monedas" + (BestVictorySeconds > 0f ? "  -  Victoria " + FormatSeconds(BestVictorySeconds) : "")
@@ -956,7 +1154,7 @@ public class DungeonGameRuntime : MonoBehaviour
         if (State == DungeonState.Credits)
         {
             Rect panel = DrawCenteredPanel(600f, 440f);
-            GUI.Label(PanelRect(panel, 90f, 24f, 420f, 60f), "Creditos", titleStyle);
+            LabelShadow(PanelRect(panel, 90f, 24f, 420f, 60f), "Creditos", titleStyle);
             GUI.Label(PanelRect(panel, 40f, 96f, 520f, 250f), "Looty Dungeon 3D - Proyecto VJ (FIB - UPC)\n\nDesarrollado por:\nCarolina Rodriguez Ujano\nMateus Grandolfi Albuquerque\n\nProfesor tutor: Oscar Argudo Medrano\n\nReferencia: Looty Dungeon", bodyStyle);
             if (GUI.Button(PanelCenteredRect(panel, 372f, 240f, 48f), "Volver", buttonStyle)) ShowMenu();
             return;
@@ -999,7 +1197,7 @@ public class DungeonGameRuntime : MonoBehaviour
         GUI.color = previous;
 
         Rect panel = DrawCenteredPanel(500f, 320f);
-        GUI.Label(PanelRect(panel, 20f, 22f, 460f, 62f), "Pausa", titleStyle);
+        LabelShadow(PanelRect(panel, 20f, 22f, 460f, 62f), "Pausa", titleStyle);
         GUI.Label(PanelRect(panel, 30f, 90f, 440f, 70f), "Sala " + (CurrentLevelIndex + 1) + "/10  -  Vida " + Health + "/3  -  Monedas " + Coins + "\nEnter o P para continuar. M para menu.", bodyStyle);
         if (GUI.Button(PanelCenteredRect(panel, 174f, 220f, 46f), "Continuar", buttonStyle)) Resume();
         if (GUI.Button(PanelCenteredRect(panel, 234f, 220f, 46f), "Menu", buttonStyle)) ShowMenu();
@@ -1008,20 +1206,40 @@ public class DungeonGameRuntime : MonoBehaviour
     private void DrawHud()
     {
         float scale = GetGuiScale();
-        DrawHealthPips();
-        float labelX = 118f * scale;
-        float menuWidth = 88f * scale;
-        float margin = 18f * scale;
-        float labelWidth = Mathf.Max(190f * scale, Screen.width - labelX - menuWidth - margin * 2f);
-        string timeText = FormatSeconds(RunSeconds);
-        string enemiesText = aliveEnemies.Count > 0 ? "     Enemigos: " + aliveEnemies.Count : "     Puerta abierta";
-        GUI.Label(new Rect(labelX, 16f * scale, labelWidth, 42f * scale), "\u25C6 " + Coins + "     Salas " + RoomsCleared + "/10     Sala " + (CurrentLevelIndex + 1) + "/10" + enemiesText + "     " + timeText, hudStyle);
-        if (GUI.Button(new Rect(Screen.width - menuWidth - margin, 18f * scale, menuWidth, 36f * scale), "Menu", buttonStyle)) ShowMenu();
+        float margin = 14f * scale;
+        float barH = 48f * scale;
+
+        // Barra superior con borde dorado: corazones | monedas \u00B7 sala \u00B7 tiempo | boton Menu.
+        Rect bar = new Rect(margin, margin, Screen.width - margin * 2f, barH);
+        DrawPanel(bar);
+
+        float pad = 14f * scale;
+        DrawHealthPips(bar, pad);
+
+        float menuW = 96f * scale;
+        float statsX = bar.x + 150f * scale;
+        float statsW = bar.xMax - menuW - 12f * scale - statsX;
+        string stats = "\u25C6 " + Coins + "      Sala " + (CurrentLevelIndex + 1) + "/10      Tiempo " + FormatSeconds(RunSeconds);
+        LabelShadow(new Rect(statsX, bar.y, statsW, barH), stats, hudStyle);
+
+        if (GUI.Button(new Rect(bar.xMax - menuW - 8f * scale, bar.y + 7f * scale, menuW, barH - 14f * scale), "Men\u00FA", buttonStyle)) ShowMenu();
+
+        // Linea de OBJETIVO de la sala (dorado), debajo de la barra.
+        string objText = aliveEnemies.Count == 0 && IsObjectiveComplete()
+            ? "Objetivo cumplido \u2014 \u00A1cruza la puerta!"
+            : "Objetivo: " + ObjectiveDescription();
+        Rect objRect = new Rect(margin + 4f * scale, bar.yMax + 6f * scale, Screen.width - margin * 2f - 8f * scale, 26f * scale);
+        LabelShadow(objRect, objText, hudSubStyle);
+
         DrawRoomProgressBar(scale);
+
         if (Time.time < messageUntil)
         {
-            float messageWidth = Mathf.Min(520f * scale, Screen.width - 32f * scale);
-            GUI.Label(new Rect(Screen.width * 0.5f - messageWidth * 0.5f, 78f * scale, messageWidth, 40f * scale), message, hudStyle);
+            float messageWidth = Mathf.Min(560f * scale, Screen.width - 32f * scale);
+            Rect msgRect = new Rect(Screen.width * 0.5f - messageWidth * 0.5f, Screen.height * 0.13f, messageWidth, 44f * scale);
+            DrawPanel(new Rect(msgRect.x - 12f * scale, msgRect.y - 4f * scale, msgRect.width + 24f * scale, msgRect.height + 8f * scale));
+            GUIStyle msgStyle = new GUIStyle(hudStyle) { alignment = TextAnchor.MiddleCenter };
+            LabelShadow(msgRect, message, msgStyle);
         }
         DrawSectionBanner(scale);
     }
@@ -1063,26 +1281,33 @@ public class DungeonGameRuntime : MonoBehaviour
         GUI.color = previous;
     }
 
-    private void DrawHealthPips()
+    private void DrawHealthPips(Rect bar, float pad)
     {
         float scale = GetGuiScale();
-        int target = Mathf.RoundToInt(34 * scale);
+        int target = Mathf.RoundToInt(30 * scale);
         if (heartStyle == null || heartStyle.fontSize != target)
         {
             heartStyle = new GUIStyle
             {
+                font = uiFont,
                 fontSize = target,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter
             };
         }
-        Color previous = GUI.color;
+        // El color del glifo lo da style.normal.textColor (no GUI.color): en un GUIStyle
+        // vacio el textColor no es blanco, por eso los corazones salian negros. Lleno =
+        // rojo, perdido = negro. Empiezan los 3 rojos y se ennegrecen al perder vida.
+        Color full = new Color(0.95f, 0.19f, 0.22f);
+        Color empty = new Color(0.18f, 0.06f, 0.07f);
+        float spacing = 32f * scale;
+        float size = 34f * scale;
+        float y = bar.y + (bar.height - size) * 0.5f;
         for (int i = 0; i < 3; i++)
         {
-            GUI.color = i < Health ? new Color(0.97f, 0.18f, 0.22f) : new Color(0.34f, 0.10f, 0.12f);
-            GUI.Label(new Rect((14f + i * 34f) * scale, 6f * scale, 36f * scale, 42f * scale), "\u2665", heartStyle);
+            heartStyle.normal.textColor = i < Health ? full : empty;
+            GUI.Label(new Rect(bar.x + pad + i * spacing, y, size, size), "\u2665", heartStyle);
         }
-        GUI.color = previous;
     }
 
     private void DrawRoomProgressBar(float scale)
@@ -1103,7 +1328,7 @@ public class DungeonGameRuntime : MonoBehaviour
         }
 
         float originX = 18f * scale;
-        float originY = 62f * scale;
+        float originY = 96f * scale;   // debajo de la barra superior y la linea de objetivo
         Color previous = GUI.color;
 
         Color cleared = new Color(0.38f, 0.85f, 0.32f, 0.95f);
@@ -1122,12 +1347,11 @@ public class DungeonGameRuntime : MonoBehaviour
 
             float size = dotSize;
             float y = originY;
-            bool isCurrent = State == DungeonState.Playing || State == DungeonState.Paused || State == DungeonState.GameOver
-                ? i == CurrentLevelIndex
-                : false;
+            bool inGame = State == DungeonState.Playing || State == DungeonState.Paused || State == DungeonState.GameOver;
+            bool isCurrent = inGame && i == CurrentLevelIndex;
 
             Color color;
-            if (State == DungeonState.Victory || i < CurrentLevelIndex || (State == DungeonState.Playing && i < RoomsCleared))
+            if (State == DungeonState.Victory || (inGame && i < CurrentLevelIndex))
             {
                 color = isBoss && State == DungeonState.Victory ? bossTint : cleared;
             }
@@ -1228,7 +1452,7 @@ public class DungeonGameRuntime : MonoBehaviour
     private void DrawEndPanel(string title, string subtitle)
     {
         Rect panel = DrawCenteredPanel(540f, 360f);
-        GUI.Label(PanelRect(panel, 50f, 22f, 440f, 60f), title, titleStyle);
+        LabelShadow(PanelRect(panel, 50f, 22f, 440f, 60f), title, titleStyle);
         GUI.Label(PanelRect(panel, 30f, 96f, 480f, 110f), subtitle, bodyStyle);
         if (GUI.Button(PanelCenteredRect(panel, 226f, 240f, 48f), State == DungeonState.Victory ? "Jugar de nuevo" : "Reintentar", buttonStyle)) StartNewGame();
         if (GUI.Button(PanelCenteredRect(panel, 288f, 240f, 48f), "Menu", buttonStyle)) ShowMenu();
@@ -1245,10 +1469,13 @@ public class DungeonGameRuntime : MonoBehaviour
             scaledWidth,
             scaledHeight);
 
+        // Atenuado de fondo para enfocar el panel.
         Color previous = GUI.color;
-        GUI.color = new Color(0.12f, 0.06f, 0.1f, 0.9f);
-        GUI.DrawTexture(rect, Texture2D.whiteTexture);
+        GUI.color = new Color(0f, 0f, 0f, 0.45f);
+        GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
         GUI.color = previous;
+
+        DrawPanel(rect);
         return rect;
     }
 
@@ -1469,38 +1696,141 @@ public class DungeonGameRuntime : MonoBehaviour
         {
             return;
         }
-
         guiScale = scale;
-        titleStyle = new GUIStyle(GUI.skin.label)
+
+        EnsureUiTextures();
+        EnsureUiFont();
+
+        titleStyle = new GUIStyle
         {
+            font = uiFont,
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.RoundToInt(42 * scale),
+            fontSize = Mathf.RoundToInt(44 * scale),
             fontStyle = FontStyle.Bold,
-            normal = { textColor = Color.white }
+            normal = { textColor = UiAccent }
         };
 
-        bodyStyle = new GUIStyle(GUI.skin.label)
+        bodyStyle = new GUIStyle
         {
+            font = uiFont,
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.RoundToInt(18 * scale),
+            fontSize = Mathf.RoundToInt(19 * scale),
             wordWrap = true,
-            normal = { textColor = new Color(1f, 0.86f, 0.48f) }
+            richText = true,
+            normal = { textColor = UiText }
         };
 
-        hudStyle = new GUIStyle(GUI.skin.label)
+        hudStyle = new GUIStyle
         {
-            alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.RoundToInt(22 * scale),
-            fontStyle = FontStyle.Bold,
-            wordWrap = true,
-            normal = { textColor = Color.white }
-        };
-
-        buttonStyle = new GUIStyle(GUI.skin.button)
-        {
+            font = uiFont,
+            alignment = TextAnchor.MiddleLeft,
             fontSize = Mathf.RoundToInt(20 * scale),
-            fontStyle = FontStyle.Bold
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = UiText }
         };
+
+        hudSubStyle = new GUIStyle
+        {
+            font = uiFont,
+            alignment = TextAnchor.MiddleLeft,
+            fontSize = Mathf.RoundToInt(16 * scale),
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = UiAccent }
+        };
+
+        panelStyle = new GUIStyle
+        {
+            normal = { background = texPanel },
+            border = new RectOffset(4, 4, 4, 4)
+        };
+
+        int btnPad = Mathf.RoundToInt(8 * scale);
+        buttonStyle = new GUIStyle
+        {
+            font = uiFont,
+            fontSize = Mathf.RoundToInt(21 * scale),
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            border = new RectOffset(4, 4, 4, 4),
+            padding = new RectOffset(btnPad, btnPad, btnPad, btnPad),
+            normal = { background = texBtn, textColor = UiText },
+            hover = { background = texBtnHover, textColor = Color.white },
+            active = { background = texBtnActive, textColor = Color.white }
+        };
+    }
+
+    private void EnsureUiTextures()
+    {
+        if (texPanel != null) return;
+        // Panel: relleno morado oscuro translucido con borde dorado (9-slice de 12px).
+        texPanel     = MakeBorderedTexture(new Color(0.11f, 0.07f, 0.15f, 0.93f), new Color(1f, 0.82f, 0.30f, 0.95f));
+        texBtn       = MakeBorderedTexture(new Color(0.20f, 0.13f, 0.26f, 0.96f), new Color(1f, 0.82f, 0.30f, 0.85f));
+        texBtnHover  = MakeBorderedTexture(new Color(0.34f, 0.20f, 0.40f, 0.98f), new Color(1f, 0.90f, 0.45f, 1f));
+        texBtnActive = MakeBorderedTexture(new Color(0.46f, 0.28f, 0.12f, 0.98f), new Color(1f, 0.90f, 0.45f, 1f));
+    }
+
+    // Textura 24x24 con borde de 4px para usar como 9-slice (paneles y botones limpios).
+    private static Texture2D MakeBorderedTexture(Color fill, Color border)
+    {
+        const int s = 24;
+        const int b = 4;
+        Texture2D t = new Texture2D(s, s, TextureFormat.RGBA32, false);
+        for (int y = 0; y < s; y++)
+        {
+            for (int x = 0; x < s; x++)
+            {
+                bool edge = x < b || y < b || x >= s - b || y >= s - b;
+                t.SetPixel(x, y, edge ? border : fill);
+            }
+        }
+        t.filterMode = FilterMode.Point;
+        t.wrapMode = TextureWrapMode.Clamp;
+        t.Apply();
+        return t;
+    }
+
+    private void EnsureUiFont()
+    {
+        if (uiFontTried) return;
+        uiFontTried = true;
+        // Fuente del sistema mas limpia que la de defecto (Fedora trae DejaVu/Liberation).
+        try
+        {
+            uiFont = Font.CreateDynamicFontFromOSFont(
+                new[] { "DejaVu Sans", "Liberation Sans", "Noto Sans", "Arial", "Verdana" }, 32);
+        }
+        catch { uiFont = null; }
+    }
+
+    // Texto con sombra para que se lea limpio sobre cualquier fondo.
+    private void LabelShadow(Rect rect, string text, GUIStyle style)
+    {
+        Color prevContent = GUI.contentColor;
+        Color baseColor = style.normal.textColor;
+        float off = Mathf.Max(1f, GetGuiScale());
+        GUI.contentColor = UiShadow;
+        Color saved = style.normal.textColor;
+        style.normal.textColor = UiShadow;
+        GUI.Label(new Rect(rect.x + off, rect.y + off, rect.width, rect.height), text, style);
+        style.normal.textColor = saved;
+        GUI.contentColor = prevContent;
+        GUI.Label(rect, text, style);
+        style.normal.textColor = baseColor;
+    }
+
+    private void DrawPanel(Rect rect)
+    {
+        if (panelStyle != null && panelStyle.normal.background != null)
+        {
+            GUI.Box(rect, GUIContent.none, panelStyle);
+        }
+        else
+        {
+            Color prev = GUI.color;
+            GUI.color = new Color(0.11f, 0.07f, 0.15f, 0.93f);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = prev;
+        }
     }
 }
 

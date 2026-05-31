@@ -14,180 +14,47 @@
     "#####"
   ],
   "enemies": [
-    {
-      "type": "Slime",
-      "col": 1,
-      "row": 3
-    },
-    {
-      "type": "Slime",
-      "col": 3,
-      "row": 4
-    },
-    {
-      "type": "Bat",
-      "col": 2,
-      "row": 6
-    }
+    { "type": "Slime", "col": 1, "row": 3 },
+    { "type": "Bat",   "col": 3, "row": 6 }
   ],
-  "traps": [
-    {
-      "type": "RetractileFork",
-      "col": 2,
-      "row": 5
-    }
-  ],
+  "traps": [],
   "walls": [
-    {
-      "col": 0,
-      "row": 0,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 0,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 1,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 1,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 2,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 2,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 3,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 3,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 4,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 4,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 5,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 5,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 6,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 6,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 7,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 7,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 8,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 8,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 9,
-      "rotation": 90
-    },
-    {
-      "col": 4,
-      "row": 9,
-      "rotation": 270
-    },
-    {
-      "col": 0,
-      "row": 9,
-      "rotation": 180
-    },
-    {
-      "col": 1,
-      "row": 9,
-      "rotation": 180
-    },
-    {
-      "col": 3,
-      "row": 9,
-      "rotation": 180
-    },
-    {
-      "col": 4,
-      "row": 9,
-      "rotation": 180
-    }
+    { "col": 0, "row": 0, "rotation": 90 },
+    { "col": 4, "row": 0, "rotation": 270 },
+    { "col": 0, "row": 1, "rotation": 90 },
+    { "col": 4, "row": 1, "rotation": 270 },
+    { "col": 0, "row": 2, "rotation": 90 },
+    { "col": 4, "row": 2, "rotation": 270 },
+    { "col": 0, "row": 3, "rotation": 90 },
+    { "col": 4, "row": 3, "rotation": 270 },
+    { "col": 0, "row": 4, "rotation": 90 },
+    { "col": 4, "row": 4, "rotation": 270 },
+    { "col": 0, "row": 5, "rotation": 90 },
+    { "col": 4, "row": 5, "rotation": 270 },
+    { "col": 0, "row": 6, "rotation": 90 },
+    { "col": 4, "row": 6, "rotation": 270 },
+    { "col": 0, "row": 7, "rotation": 90 },
+    { "col": 4, "row": 7, "rotation": 270 },
+    { "col": 0, "row": 8, "rotation": 90 },
+    { "col": 4, "row": 8, "rotation": 270 },
+    { "col": 0, "row": 9, "rotation": 90 },
+    { "col": 4, "row": 9, "rotation": 270 },
+    { "col": 0, "row": 9, "rotation": 180 },
+    { "col": 1, "row": 9, "rotation": 180 },
+    { "col": 3, "row": 9, "rotation": 180 },
+    { "col": 4, "row": 9, "rotation": 180 }
   ],
   "decorations": [
-    {
-      "type": "FloorTorch",
-      "col": 1,
-      "row": 1,
-      "rotation": 0,
-      "yOffset": 0.5
-    },
-    {
-      "type": "FloorTorch",
-      "col": 3,
-      "row": 1,
-      "rotation": 0,
-      "yOffset": 0.5
-    },
-    {
-      "type": "Caliz",
-      "col": 1,
-      "row": 8,
-      "rotation": 0,
-      "yOffset": 0.5
-    },
-    {
-      "type": "Caliz",
-      "col": 3,
-      "row": 8,
-      "rotation": 0,
-      "yOffset": 0.5
-    }
+    { "type": "FloorTorch", "col": 1, "row": 1, "rotation": 0,   "yOffset": 0 },
+    { "type": "FloorTorch", "col": 3, "row": 1, "rotation": 0,   "yOffset": 0 },
+    { "type": "Barrel",     "col": 0, "row": 2, "rotation": 0,   "yOffset": 0 },
+    { "type": "Barrel",     "col": 4, "row": 2, "rotation": 0,   "yOffset": 0 },
+    { "type": "Bookshelf",  "col": 0, "row": 4, "rotation": 0,   "yOffset": 0 },
+    { "type": "Bookshelf",  "col": 4, "row": 4, "rotation": 180, "yOffset": 0 },
+    { "type": "Carpet",     "col": 2, "row": 3, "rotation": 0,   "yOffset": 0 },
+    { "type": "Cauldron",   "col": 4, "row": 7, "rotation": 0,   "yOffset": 0 },
+    { "type": "Caliz",      "col": 1, "row": 8, "rotation": 0,   "yOffset": 0 },
+    { "type": "Caliz",      "col": 3, "row": 8, "rotation": 0,   "yOffset": 0 }
   ],
   "fallingFloor": true
 }

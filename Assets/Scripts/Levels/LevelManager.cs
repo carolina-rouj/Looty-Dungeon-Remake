@@ -494,20 +494,8 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    void OnGUI()
-    {
-        Event e = Event.current;
-        if (e.type == EventType.KeyDown) {
-            if (e.keyCode == KeyCode.Alpha0) LoadLevel("level1");
-            if (e.keyCode == KeyCode.Alpha1) LoadLevel("level2");
-            if (e.keyCode == KeyCode.Alpha2) LoadLevel("level3");
-            if (e.keyCode == KeyCode.Alpha3) LoadLevel("level4");
-            if (e.keyCode == KeyCode.Alpha4) LoadLevel("level5");
-            if (e.keyCode == KeyCode.Alpha5) LoadLevel("level6");
-            if (e.keyCode == KeyCode.Alpha6) LoadLevel("level7");
-            if (e.keyCode == KeyCode.Alpha7) LoadLevel("level8");
-            if (e.keyCode == KeyCode.Alpha8) LoadLevel("level9");
-            if (e.keyCode == KeyCode.Alpha9) LoadLevel("final_level");
-        }
-    }
+    // NOTA: el salto de nivel con teclas 0-9 lo gestiona DungeonGameRuntime (que ademas
+    // actualiza el estado del juego, el HUD y reposiciona al player). Antes habia aqui un
+    // OnGUI que cargaba niveles directamente y puenteaba al runtime: eso desincronizaba la
+    // barra de progreso del HUD y provocaba dobles cargas. Se elimino a proposito.
 }
