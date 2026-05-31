@@ -1,7 +1,7 @@
 # TODO — VJ-3D
 
 ## CAROL
-- [ ] Afectación trampas al jugador
+- [x] Afectación trampas al jugador
 - [ ] Slime — arreglar comportamiento
 - [ ] Enemigos — revisar comportamiento e integrar Wizard y Gnome (+ añadirlos en niveles)
 - [ ] Arreglar comportamiento de puertas
