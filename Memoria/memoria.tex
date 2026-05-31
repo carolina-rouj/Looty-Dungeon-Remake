@@ -429,7 +429,7 @@ reutilitzat cap línia de codi} de cap font externa.
 
 \subsection{Organització i repartiment de la feina}
 
-Seguint el patró que suggereix el PDF de l'enunciat (colors verd i vermell),
+Seguint el patró que suggereix el PDF de l'enunciat,
 \textbf{Carolina} s'ha encarregat de les \textbf{sales parells} (2, 4, 6, 8) i de
 la \textbf{sala final del boss}, i \textbf{Mateus} de les \textbf{sales senars}
 (1, 3, 5, 7, 9). A més del disseny de sales, la feina s'ha repartit per capes de
@@ -450,59 +450,35 @@ codi:
 
 \subsection{Planificació, iteracions i seguiment}
 
-Hem dividit la feina en iteracions. La Taula~\ref{tab:iters} en resumeix el
-contingut i l'estat final.
+Hem dividit la feina en iteracions, cadascuna gestionada com un \textit{sprint}.
+La Taula~\ref{tab:iters} en resumeix el contingut.
 
 \begin{table}[H]
 \centering
 \caption{Iteracions del projecte.}
 \label{tab:iters}
-\begin{tabularx}{\linewidth}{lXl}
+\begin{tabularx}{\linewidth}{lX}
 \toprule
-\textbf{Iteració} & \textbf{Contingut} & \textbf{Estat} \\
+\textbf{Iteració} & \textbf{Contingut} \\
 \midrule
 1 -- Base & Configuració d'Unity, scripts d'enemics, slime amb rastre i sales
-bàsiques. & Tancada \\
+bàsiques. \\
 2 -- Mecàniques & Combat, vida, HUD, porta condicionada, monedes, àudio, trampes
-i terra que cau. & Tancada \\
+i terra que cau. \\
 3 -- Integració & Integració de les dues capes a \texttt{develop}, prefabs
-d'enemics, ambient per secció, música de boss i pickup de cor. & Tancada \\
+d'enemics, ambient per secció, música de boss i pickup de cor. \\
 4 -- Polit i correccions & Moviment casella a casella, col·lisió de trampes,
-objectius per sala, ajustos de la caiguda del terra i correcció d'errors. &
-Tancada \\
+objectius per sala, ajustos de la caiguda del terra i correcció d'errors. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Cada iteració l'hem gestionada com un \textit{sprint} amb el seu backlog. La
-Taula~\ref{tab:backlog} mostra l'estat final del tauler de tasques, organitzat en
-les columnes \textit{forecast} (previst), \textit{to-do}, \textit{in-progress} i
-\textit{done}, tal com s'ha anat seguint al llarg del projecte.
-
-\begin{table}[H]
-\centering
-\caption{Tauler de sprints / backlog del projecte (estat final).}
-\label{tab:backlog}
-\begin{tabularx}{\linewidth}{XXXX}
-\toprule
-\textbf{Forecast} & \textbf{To-Do} & \textbf{In-Progress} & \textbf{Done} \\
-\midrule
-Leaderboard en línia; inventari d'objectes &
-(buit) &
-(buit) &
-Sales i geometria; enemics i boss; trampes; combat i vida; HUD i pantalles;
-àudio; terra que cau; moviment casella a casella; objectius per sala; polit i
-correcció d'errors \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-El codi viu al repositori \url{https://github.com/carolina-rouj/VJ-3D}. Cada
-membre treballa en branques pròpies (\texttt{mateus-*}, \texttt{carol-*}) i la
-integració es fa amb \textit{pull requests} cap a la branca \texttt{develop}, de
-manera que l'historial de commits i de PRs actua com a registre del treball, de
-les fites obertes i tancades i dels punts tractats a les reunions de seguiment.
-La Figura~\ref{fig:git} mostra un fragment d'aquest historial.
+Per al control de versions i la integració hem fet servir \textbf{Git}. Cadascú
+treballa en branques pròpies i la integració es fa amb \textit{pull requests} cap
+a una branca comuna, de manera que l'historial de commits i de PRs actua com a
+registre del treball, de les fites obertes i tancades i dels punts tractats a les
+reunions de seguiment. La Figura~\ref{fig:git} mostra un fragment d'aquest
+historial.
 
 \begin{figure}[H]
 \centering
