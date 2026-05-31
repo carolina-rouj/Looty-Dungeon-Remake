@@ -25,7 +25,10 @@ public class RuntimeEnemySetup : MonoBehaviour
 
         switch (enemyType)
         {
-            case "Wizard": gameObject.AddComponent<Wizard>(); break;
+            case "Wizard":
+                gameObject.AddComponent<Wizard>();
+                gameObject.AddComponent<WizardCombat>();
+                break;
             case "Gnome":  gameObject.AddComponent<Gnome>();  break;
             case "Boss":   gameObject.AddComponent<Boss>(); break;
             case "Slime":  gameObject.AddComponent<Slime>();  break;
@@ -33,5 +36,6 @@ public class RuntimeEnemySetup : MonoBehaviour
         }
 
         EnemyVisualBuilder.Build(enemyType, transform);
+        EnemyFloorFall.Ensure(gameObject);
     }
 }

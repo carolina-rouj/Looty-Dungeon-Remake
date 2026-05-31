@@ -49,10 +49,11 @@ public class EnemyFloorFall : MonoBehaviour
         falling = true;
         foreach (MonoBehaviour behaviour in GetComponents<MonoBehaviour>())
         {
-            if (behaviour != this)
-            {
-                behaviour.enabled = false; // congela la IA del enemigo
-            }
+            if (behaviour == this) continue;
+            // StopAllCoroutines para que un salto en curso no pelee con el Rigidbody.
+            // enabled=false solo detiene Update, las corutinas siguen si no se paran.
+            behaviour.StopAllCoroutines();
+            behaviour.enabled = false;
         }
         foreach (Collider col in GetComponents<Collider>())
         {
