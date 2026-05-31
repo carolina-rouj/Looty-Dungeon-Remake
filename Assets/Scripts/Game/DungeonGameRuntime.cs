@@ -1050,9 +1050,11 @@ public class DungeonGameRuntime : MonoBehaviour
             Destroy(door.gameObject);
         }
 
-        // Compuerta FUNCIONAL: cubo que bloquea hasta matar a los enemigos y luego se vuelve
-        // trigger para pasar de sala. Sirve de "gate" en todos los niveles (tambien los de
-        // Carolina). Su visual se sustituye por la puerta real de Carolina cuando se puede.
+        // Compuerta FUNCIONAL (invisible): bloquea hasta cumplir el objetivo y luego se
+        // vuelve trigger para pasar de sala. El VISUAL de la puerta lo pone el JSON de cada
+        // nivel (pared "type": "Door") — tanto en los de Carolina como en los mios, que ahora
+        // usan su mismo esquema (puerta en col2, fila N-2, con suelo detras). Asi no hay
+        // vacio ante la puerta ni se pierde vida al cruzar.
         GameObject doorObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         doorObject.name = "Exit Door";
         doorObject.transform.position = position + Vector3.up * 0.75f;
@@ -1062,75 +1064,10 @@ public class DungeonGameRuntime : MonoBehaviour
             doorObject.transform.SetParent(levelManager.transform, true);
         }
 
-        // En MIS niveles (indices pares: level1/3/5/7/9) no hay puerta en el JSON, asi que
-        // montamos la puerta de Carolina (marco wallDoor + hoja door) como visual sobre la
-        // compuerta. En SUS niveles la puerta ya la pone su JSON, no la duplicamos.
-        bool isMyLevel = (CurrentLevelIndex % 2 == 0);
-        if (isMyLevel)
-        {
-            AddExitLanding(position);
-        }
-        bool visualPresent = isMyLevel ? TryAttachDoorVisual(doorObject.transform, position) : true;
-        if (visualPresent)
-        {
-            Renderer gateRenderer = doorObject.GetComponent<Renderer>();
-            if (gateRenderer != null) gateRenderer.enabled = false;   // la compuerta queda invisible
-        }
+        Renderer gateRenderer = doorObject.GetComponent<Renderer>();
+        if (gateRenderer != null) gateRenderer.enabled = false;   // la compuerta queda invisible
 
         door = doorObject.AddComponent<DungeonDoor>();
-    }
-
-    // Instancia la puerta de Carolina (marco + hoja) en la salida, mirando hacia la sala,
-    // sin colliders. Devuelve true si al menos pudo poner el marco.
-    private bool TryAttachDoorVisual(Transform gate, Vector3 exitPosition)
-    {
-        if (levelManager == null) return false;
-
-        GameObject framePrefab = levelManager.wallDoorPrefab;
-        GameObject leafPrefab = levelManager.doorPrefab;
-        if (framePrefab == null && leafPrefab == null) return false;
-
-        // Suelo de la salida (la compuerta esta 0.75 por encima; el marco va a ras de suelo).
-        Vector3 groundPos = new Vector3(exitPosition.x, 0f, exitPosition.z);
-        // 180 = pared del fondo mirando a la sala, igual que las paredes traseras impares.
-        Quaternion rot = Quaternion.Euler(0f, 180f, 0f);
-
-        if (framePrefab != null)
-        {
-            GameObject frame = Instantiate(framePrefab, groundPos, rot, gate);
-            StripColliders(frame);
-        }
-        if (leafPrefab != null)
-        {
-            GameObject leaf = Instantiate(leafPrefab, groundPos, rot, gate);
-            StripColliders(leaf);
-        }
-        return framePrefab != null;
-    }
-
-    // En MIS niveles, entre la ultima fila de suelo y la puerta habia un hueco donde el
-    // jugador caia (perdiendo una vida) al ir a cruzar la puerta. Anadimos una plataforma
-    // de suelo INVISIBLE (capa "Floor") en la zona de salida para que el camino hasta y a
-    // traves de la puerta sea solido. (Los niveles de Carolina ya lo tienen resuelto.)
-    private void AddExitLanding(Vector3 exitPosition)
-    {
-        GameObject landing = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        landing.name = "Exit Landing";
-        // Top de la plataforma a y=0.5 (igual que el suelo): cubo escala 1 centrado en y=0.
-        landing.transform.position = new Vector3(exitPosition.x, 0f, exitPosition.z + 0.5f);
-        landing.transform.localScale = new Vector3(3f, 1f, 2f);
-        landing.layer = LayerMask.NameToLayer("Floor");
-        Renderer r = landing.GetComponent<Renderer>();
-        if (r != null) r.enabled = false;   // invisible: solo evita la caida
-        if (levelManager != null) landing.transform.SetParent(levelManager.transform, true);
-    }
-
-    private static void StripColliders(GameObject go)
-    {
-        foreach (Collider c in go.GetComponentsInChildren<Collider>(true))
-        {
-            Destroy(c);
-        }
     }
 
     private void OnGUI()
@@ -1451,11 +1388,31 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private void DrawEndPanel(string title, string subtitle)
     {
-        Rect panel = DrawCenteredPanel(540f, 360f);
-        LabelShadow(PanelRect(panel, 50f, 22f, 440f, 60f), title, titleStyle);
-        GUI.Label(PanelRect(panel, 30f, 96f, 480f, 110f), subtitle, bodyStyle);
-        if (GUI.Button(PanelCenteredRect(panel, 226f, 240f, 48f), State == DungeonState.Victory ? "Jugar de nuevo" : "Reintentar", buttonStyle)) StartNewGame();
-        if (GUI.Button(PanelCenteredRect(panel, 288f, 240f, 48f), "Menu", buttonStyle)) ShowMenu();
+        bool victory = State == DungeonState.Victory;
+        Rect panel = DrawCenteredPanel(560f, 380f);
+
+        // Titulo: dorado y celebratorio en victoria, rojizo en derrota.
+        GUIStyle ts = new GUIStyle(titleStyle)
+        {
+            fontSize = Mathf.RoundToInt((victory ? 50 : 44) * GetGuiScale())
+        };
+        ts.normal.textColor = victory ? new Color(1f, 0.86f, 0.28f) : new Color(1f, 0.40f, 0.32f);
+        string head = victory ? "¡ V I C T O R I A !" : "Has perdido";
+        LabelShadow(PanelRect(panel, 30f, 26f, 500f, 70f), head, ts);
+
+        if (victory)
+        {
+            // Subrayado dorado decorativo.
+            float scale = GetGuiScale();
+            Color prev = GUI.color;
+            GUI.color = new Color(1f, 0.82f, 0.30f, 0.9f);
+            GUI.DrawTexture(new Rect(panel.x + panel.width * 0.5f - 150f * scale, panel.y + 100f * scale, 300f * scale, 3f * scale), Texture2D.whiteTexture);
+            GUI.color = prev;
+        }
+
+        GUI.Label(PanelRect(panel, 30f, 116f, 500f, 120f), subtitle, bodyStyle);
+        if (GUI.Button(PanelCenteredRect(panel, 252f, 280f, 52f), victory ? "Jugar de nuevo" : "Reintentar", buttonStyle)) StartNewGame();
+        if (GUI.Button(PanelCenteredRect(panel, 314f, 280f, 52f), "Menú principal", buttonStyle)) ShowMenu();
     }
 
     private Rect DrawCenteredPanel(float width, float height)
@@ -1732,8 +1689,8 @@ public class DungeonGameRuntime : MonoBehaviour
         hudSubStyle = new GUIStyle
         {
             font = uiFont,
-            alignment = TextAnchor.MiddleLeft,
-            fontSize = Mathf.RoundToInt(16 * scale),
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = Mathf.RoundToInt(17 * scale),
             fontStyle = FontStyle.Bold,
             normal = { textColor = UiAccent }
         };
@@ -1793,13 +1750,10 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         if (uiFontTried) return;
         uiFontTried = true;
-        // Fuente del sistema mas limpia que la de defecto (Fedora trae DejaVu/Liberation).
-        try
-        {
-            uiFont = Font.CreateDynamicFontFromOSFont(
-                new[] { "DejaVu Sans", "Liberation Sans", "Noto Sans", "Arial", "Verdana" }, 32);
-        }
-        catch { uiFont = null; }
+        // Usamos la fuente por defecto de Unity (GUI.skin.font): cargar una fuente del SO
+        // con CreateDynamicFontFromOSFont fallaba en esta instalacion ("Unable to load font
+        // face"), dejando el texto diminuto/invisible. La de defecto SIEMPRE renderiza.
+        uiFont = GUI.skin != null ? GUI.skin.font : null;
     }
 
     // Texto con sombra para que se lea limpio sobre cualquier fondo.
