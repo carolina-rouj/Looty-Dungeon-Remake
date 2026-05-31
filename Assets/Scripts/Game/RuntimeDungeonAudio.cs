@@ -53,7 +53,14 @@ public class RuntimeDungeonAudio : MonoBehaviour
             // Game over: arpegio descendente triste.
             { RuntimeSfx.GameOver, Arp("GameOver", new[] { 523f, 415f, 330f, 247f }, 0.16f, 0.5f, Wave.Triangle) },
             // Victoria: fanfarria ascendente.
-            { RuntimeSfx.Victory, Arp("Victory", new[] { 523f, 659f, 784f, 1047f }, 0.14f, 0.45f, Wave.Square) }
+            { RuntimeSfx.Victory, Arp("Victory", new[] { 523f, 659f, 784f, 1047f }, 0.14f, 0.45f, Wave.Square) },
+            // Muerte de enemigo: "poof" descendente (vale tanto si lo mata el jugador como
+            // si cae al vacio).
+            { RuntimeSfx.EnemyDeath, Sweep("EnemyDeath", 540f, 120f, 0.22f, 0.5f, Wave.Square) },
+            // Trampa de flecha al disparar: silbido agudo y rapido.
+            { RuntimeSfx.ArrowShoot, Sweep("ArrowShoot", 1350f, 560f, 0.1f, 0.34f, Wave.Noise) },
+            // Pinchos del suelo al subir: estocada metalica ascendente.
+            { RuntimeSfx.Spikes, Sweep("Spikes", 480f, 1150f, 0.09f, 0.4f, Wave.Square) }
         };
 
         // Bucles musicales (melodia chiptune + bajo).
@@ -229,5 +236,8 @@ public enum RuntimeSfx
     FloorFall,
     GameOver,
     Victory,
-    Slime
+    Slime,
+    EnemyDeath,
+    ArrowShoot,
+    Spikes
 }
