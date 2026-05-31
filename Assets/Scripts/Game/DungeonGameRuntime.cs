@@ -769,6 +769,8 @@ public class DungeonGameRuntime : MonoBehaviour
         }
 
         door.Open();
+        if (levelManager != null && levelManager.VisualDoor != null)
+            Destroy(levelManager.VisualDoor);
         runtimeAudio.PlaySfx(RuntimeSfx.Door);
         RuntimeVfx.Burst(door.transform.position + Vector3.up, Color.yellow, 28, 0.7f);
         RuntimeVfx.FloatingText(door.transform.position + Vector3.up * 1.55f, "OPEN", new Color(1f, 0.78f, 0.08f));

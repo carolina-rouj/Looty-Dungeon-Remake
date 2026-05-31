@@ -53,6 +53,7 @@ public class LevelManager : MonoBehaviour
 
 
     public float tamañoCasilla { get; private set; } = 1.0f;
+    public GameObject VisualDoor { get; private set; }
     public float MaxBoundX { get; private set; }
     public float MinBoundZ { get; private set; }
     public float MaxBoundZ { get; private set; }
@@ -118,6 +119,7 @@ public class LevelManager : MonoBehaviour
             if (go != null) Destroy(go);
 
         spawnedObjects.Clear();
+        VisualDoor = null;
 
         foreach (var obj in FindObjectsByType<RastroSlime>(FindObjectsSortMode.None))
             Destroy(obj.gameObject);
@@ -246,13 +248,13 @@ public class LevelManager : MonoBehaviour
             GameObject w = Instantiate(wallPrefab, pos, rot);
             w.transform.localScale = scale;
             spawnedObjects.Add(w);
-            RegisterRowObject(w, spawn.row);   // que la pared caiga con su fila
 
             if (isDoor && doorPrefab != null)
             {
                 GameObject door = Instantiate(doorPrefab, w.transform);
                 door.transform.localPosition = Vector3.zero;
                 door.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+                VisualDoor = door;
             }
         }
     }
