@@ -22,7 +22,8 @@
   "traps": [
     { "type": "ArrowShoot", "col": 0, "row": 4, "dianaCol": 4, "dianaRow": 4 },
     { "type": "RetractileFork", "col": 0, "row": 7, "rotation": 0 },
-    { "type": "RetractileFork", "col": 4, "row": 7, "rotation": 180 }
+    { "type": "RetractileFork", "col": 4, "row": 7, "rotation": 180 },
+    { "type": "SpiderWebs", "col": 2, "row": 5 }
   ],
   "walls": [
     { "col": 1, "row": 3, "rotation": 90, "type": "Plain" },
