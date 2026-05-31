@@ -58,18 +58,6 @@ public static class DungeonInput
         return z;
     }
 
-    public static bool DashPressed()
-    {
-        bool pressed = false;
-#if ENABLE_INPUT_SYSTEM
-        if (Kb != null)
-        {
-            pressed = Kb.leftShiftKey.wasPressedThisFrame || Kb.rightShiftKey.wasPressedThisFrame;
-        }
-#endif
-        return pressed || LegacyKeyDown(KeyCode.LeftShift) || LegacyKeyDown(KeyCode.RightShift);
-    }
-
     public static bool AttackPressed()
     {
         bool pressed = false;

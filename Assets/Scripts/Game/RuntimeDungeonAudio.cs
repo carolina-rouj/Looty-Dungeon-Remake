@@ -34,8 +34,6 @@ public class RuntimeDungeonAudio : MonoBehaviour
             { RuntimeSfx.Attack, Sweep("Attack", 1400f, 380f, 0.12f, 0.4f, Wave.Noise) },
             // Impacto en enemigo: golpe seco (ruido corto + tono grave).
             { RuntimeSfx.Hit, Thud("Hit", 0.13f, 0.6f) },
-            // Dash: whoosh ascendente.
-            { RuntimeSfx.Dash, Sweep("Dash", 300f, 1100f, 0.16f, 0.3f, Wave.Noise) },
             // Moneda: arpegio brillante ascendente (el clasico "bling").
             { RuntimeSfx.Coin, Arp("Coin", new[] { 988f, 1319f }, 0.07f, 0.42f, Wave.Square) },
             // Puerta abierta: acorde ascendente suave.
@@ -227,7 +225,6 @@ public enum RuntimeSfx
 {
     Attack,
     Hit,
-    Dash,
     Coin,
     Door,
     PlayerDamage,

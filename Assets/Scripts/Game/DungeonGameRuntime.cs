@@ -875,13 +875,6 @@ public class DungeonGameRuntime : MonoBehaviour
         cameraFollow.Shake(hit ? 0.12f : 0.06f, hit ? 0.14f : 0.07f);
     }
 
-    public void PlayDash(Vector3 position, Vector3 direction)
-    {
-        runtimeAudio.PlaySfx(RuntimeSfx.Dash);
-        cameraFollow.Shake(0.07f, 0.08f);
-        RuntimeVfx.DashTrail(position + Vector3.up * 0.35f, direction);
-    }
-
     public void PlayEnemyDeath(Vector3 position)
     {
         runtimeAudio.PlaySfx(RuntimeSfx.EnemyDeath);
@@ -1098,7 +1091,7 @@ public class DungeonGameRuntime : MonoBehaviour
         {
             Rect panel = DrawCenteredPanel(540f, 400f);
             LabelShadow(PanelRect(panel, 20f, 20f, 500f, 70f), "Looty Dungeon 3D", titleStyle);
-            GUI.Label(PanelRect(panel, 28f, 92f, 484f, 108f), "WASD/flechas para moverte.  Shift: dash.  Espacio o click: atacar.\nP o Esc: pausa.  0-9: saltar a salas.", bodyStyle);
+            GUI.Label(PanelRect(panel, 28f, 92f, 484f, 108f), "WASD/flechas: moverte casilla a casilla.  Espacio o click: atacar.\nP o Esc: pausa.  0-9: saltar a salas.", bodyStyle);
             string bestLine = (BestCoins > 0 || BestVictorySeconds > 0f)
                 ? "Mejor partida: " + BestCoins + " monedas" + (BestVictorySeconds > 0f ? "  -  Victoria " + FormatSeconds(BestVictorySeconds) : "")
                 : "Sin partidas previas guardadas.";
