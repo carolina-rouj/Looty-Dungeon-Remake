@@ -978,6 +978,14 @@ public class DungeonGameRuntime : MonoBehaviour
         Time.timeScale = 1f;
         runTimerActive = true;
         aliveEnemies.Clear();
+        // Desactiva YA los enemigos del nivel anterior. El Destroy de ClearLevel es diferido
+        // a fin de frame, así que si no, DiscoverEnemies (que corre este mismo frame) los
+        // contaría junto a los nuevos y el objetivo saldría mal (p.ej. "0/2" con 1 enemigo).
+        // FindObjectsByType ignora los inactivos, así que desactivarlos basta.
+        foreach (MonoBehaviour stale in FindEnemyBehaviours())
+        {
+            if (stale != null) stale.gameObject.SetActive(false);
+        }
         SetPlayerActive(true);
         if (CurrentLevelIndex == levelNames.Length - 1)
         {

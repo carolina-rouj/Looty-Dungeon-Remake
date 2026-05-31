@@ -59,7 +59,11 @@ public class EnemyFloorFall : MonoBehaviour
         {
             col.enabled = false;
         }
-        Rigidbody body = gameObject.AddComponent<Rigidbody>();
+        // Reutiliza el Rigidbody si ya tuviera uno (no se puede añadir un segundo: daría null
+        // y un NullReferenceException al tocar useGravity).
+        Rigidbody body = GetComponent<Rigidbody>();
+        if (body == null) body = gameObject.AddComponent<Rigidbody>();
+        body.isKinematic = false;
         body.useGravity = true;
         Destroy(gameObject, 2f);
     }

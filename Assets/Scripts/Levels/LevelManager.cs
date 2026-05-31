@@ -270,9 +270,11 @@ public class LevelManager : MonoBehaviour
             Vector3 pos = GridToWorld(spawn.col, spawn.row);
             pos.y = enemySpawnHeight;
             spawnedObjects.Add(Instantiate(prefab, pos, Quaternion.identity));
-            if (!objectsByRow.ContainsKey(spawn.row))
-                objectsByRow[spawn.row] = new List<GameObject>();
-            objectsByRow[spawn.row].Add(spawnedObjects[spawnedObjects.Count - 1]);
+            // Mateus: los enemigos NO se registran en objectsByRow. Si se desplomaban con su
+            // fila de spawn, se les añadía un Rigidbody pero su IA seguía fijándoles la Y cada
+            // frame y quedaban FLOTANDO en el vacío. La caída de enemigos la gestiona
+            // EnemyFloorFall según su posición REAL (cuando no hay suelo bajo ellos, para su
+            // IA y los deja caer), que es lo correcto aunque se hayan movido de casilla.
         }
     }
 
@@ -330,6 +332,13 @@ public class LevelManager : MonoBehaviour
         GameObject shooter = Instantiate(arrowShootPrefab, shooterPos, rot);
         GameObject diana = Instantiate(dianaPrefab, dianaPos, Quaternion.identity);
 
+        // Mateus: cuerpo SÓLIDO del lanzador para que el jugador NO pueda meterse dentro.
+        // (La flecha tiene collider trigger, así que esto no bloquea su propio disparo.)
+        BoxCollider shooterBody = shooter.AddComponent<BoxCollider>();
+        shooterBody.isTrigger = false;
+        shooterBody.center = new Vector3(0f, -0.5f, 0f);
+        shooterBody.size = new Vector3(0.8f, 1.6f, 0.8f);
+
         ArrowTrap trap = shooter.GetComponent<ArrowTrap>();
         Diana dianaComp = diana.GetComponent<Diana>();
 
@@ -353,8 +362,8 @@ public class LevelManager : MonoBehaviour
 
         spawnedObjects.Add(shooter);
         spawnedObjects.Add(diana);
-        RegisterRowObject(shooter, spawn.row);
-        RegisterRowObject(diana, spawn.dianaRow);
+        // (shooter ya está en objectsByRow y diana en tilesByRow más arriba; no duplicar
+        //  el registro de caída o se les añadiría el Rigidbody dos veces.)
     }
 
     void SpawnRetractileFork(TrapSpawn spawn)
@@ -389,12 +398,18 @@ public class LevelManager : MonoBehaviour
         col.size   = new Vector3(1.1f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
         col.center = new Vector3(0.55f, 0f, 0f);     // delante del contenedor
 
+        // Mateus: cuerpo SÓLIDO del fork para que el jugador no pueda meterse dentro
+        // (el trigger de arriba sigue haciendo daño; este solo bloquea el paso).
+        BoxCollider body = root.AddComponent<BoxCollider>();
+        body.isTrigger = false;
+        body.center = new Vector3(0f, -0.5f, 0f);
+        body.size = new Vector3(0.7f, 1.6f, 0.7f);
+
         if (!objectsByRow.ContainsKey(spawn.row))
             objectsByRow[spawn.row] = new List<GameObject>();
         objectsByRow[spawn.row].Add(root);
 
         spawnedObjects.Add(root);
-        RegisterRowObject(root, spawn.row);
     }
 
     void SpawnSpiderWebs(TrapSpawn spawn)
@@ -427,7 +442,6 @@ public class LevelManager : MonoBehaviour
         objectsByRow[spawn.row].Add(root);
 
         spawnedObjects.Add(root);
-        RegisterRowObject(root, spawn.row);
     }
 
     void SpawnDecorations()
@@ -570,13 +584,14 @@ public class LevelManager : MonoBehaviour
         if (go == null) return;
         if (!objectsByRow.ContainsKey(row))
             objectsByRow[row] = new List<GameObject>();
-        objectsByRow[row].Add(go);
+        if (!objectsByRow[row].Contains(go))   // evita registrar dos veces -> Rigidbody doble
+            objectsByRow[row].Add(go);
     }
 
     // Mateus: gracia inicial antes de que el suelo EMPIECE a caer. Antes la primera fila
     // (donde aparece el jugador) se desplomaba a los ~2s de entrar, y se perdia una vida
     // nada mas empezar el nivel. Con esto el jugador tiene tiempo de orientarse y arrancar.
-    private const float StartFallGrace = 5f;
+    private const float StartFallGrace = 3f;
 
     // codigo para que el suelo caiga por filas
     IEnumerator FallingFloors()
