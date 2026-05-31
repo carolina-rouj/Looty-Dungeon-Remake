@@ -36,25 +36,6 @@ public static class RuntimeVfx
         Object.Destroy(slash, 0.12f);
     }
 
-    public static void DashTrail(Vector3 position, Vector3 direction)
-    {
-        Color color = new Color(0.28f, 0.78f, 1f);
-        Burst(position, color, 14, 0.22f);
-
-        Vector3 flatDirection = direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward;
-        for (int i = 0; i < 3; i++)
-        {
-            GameObject streak = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            streak.name = "Dash Trail FX";
-            streak.transform.position = position - flatDirection * (0.18f + i * 0.18f);
-            streak.transform.rotation = Quaternion.LookRotation(flatDirection);
-            streak.transform.localScale = new Vector3(0.12f, 0.05f, 0.45f - i * 0.09f);
-            streak.GetComponent<Renderer>().material = RuntimeMaterials.GetEmissive("dash_trail", color, 1.4f);
-            Object.Destroy(streak.GetComponent<Collider>());
-            Object.Destroy(streak, 0.12f + i * 0.035f);
-        }
-    }
-
     public static void FloatingText(Vector3 position, string value, Color color)
     {
         GameObject textObject = new GameObject("Floating Text FX");
