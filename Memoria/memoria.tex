@@ -124,11 +124,9 @@ descàrregues.
 
 \subsection{Equip i tecnologies}
 
-L'equip està format per \textbf{dues persones} (Carolina i Mateus) que han
-treballat a parts iguals, repartint-se les sales i les capes de codi (vegeu la
-Secció~\ref{sec:metodologia}). Pel que fa al perfil, tots dos som estudiants del
-grau d'Enginyeria Informàtica de la FIB amb coneixements de C\# i Unity adquirits
-a l'assignatura. La tecnologia emprada és:
+Som \textbf{dues persones} (Carolina i Mateus) i hem treballat a parts iguals,
+repartint-nos les sales i les capes de codi (vegeu la
+Secció~\ref{sec:metodologia}). La tecnologia que hem fet servir és:
 
 \begin{itemize}[noitemsep]
     \item \textbf{Unity 6000.0.74f1} amb el pipeline de render \textbf{URP}.
@@ -301,27 +299,28 @@ aprecia l'estil voxel coherent en tot l'escenari.}
 
 \subsubsection{Entitats del joc}
 
-A continuació es mostra, individualment, cada entitat que apareix al joc. Els
-personatges (jugador i enemics) es generen per codi amb primitius i materials
-URP; la resta són models voxel. La Figura~\ref{fig:ent_chars} recull el jugador i
-els enemics, la Figura~\ref{fig:ent_deco} les decoracions i la
-Figura~\ref{fig:ent_traps} els elements de trampes, monedes i projectils.
+A continuació es mostra, individualment, cada entitat que apareix al joc. El
+jugador i els enemics gnome, mag i boss es generen per codi amb primitius i
+materials URP (Figura~\ref{fig:ent_chars}); l'slime i les decoracions són models
+voxel (Figura~\ref{fig:ent_deco}); i la Figura~\ref{fig:ent_traps} recull els
+elements de les trampes, la moneda i la fletxa.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{captures/entities_characters.png}
-\caption{Personatges del joc: el jugador (heroi amb espasa, es mou casella a
-casella), el \textit{slime} (enemic bàsic que salta i deixa rastre), el
-\textit{gnome}, el \textit{mag} (enemic que acompanya el boss) i el \textit{boss}
-final (esquelet rei amb corona, escut i espasa).}
+\caption{Personatges generats per codi (primitius i materials URP): el jugador
+(heroi amb espasa, es mou casella a casella), el \textit{gnome}, el \textit{mag}
+(enemic que acompanya el boss) i el \textit{boss} final (esquelet rei amb corona,
+escut i espasa).}
 \label{fig:ent_chars}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{captures/entities_decorations.png}
-\caption{Decoracions de les sales (més de 5 de diferents, sense comptar les
-parets): torxa, barril, prestatgeria, calderó, catifa, tron i calze.}
+\caption{Models voxel del joc: l'enemic \textit{slime} (salta per la sala i deixa
+un rastre que alenteix) i les decoracions (més de 5 de diferents, sense comptar
+les parets): torxa, barril, prestatgeria, calderó, catifa, tron i calze.}
 \label{fig:ent_deco}
 \end{figure}
 
@@ -380,8 +379,8 @@ té resposta visual i sonora:
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\linewidth]{captures/lvl09.png}
-\caption{Sala avançada amb el terra caient per files (s'hi veuen els forats al
-terra) i diverses trampes. La barra de progrés del HUD indica les sales superades.}
+\caption{Sala avançada de la masmorra amb diverses trampes. La barra de progrés
+del HUD (a la part superior) indica les sales superades.}
 \label{fig:falling}
 \end{figure}
 
@@ -393,8 +392,8 @@ mena cap al tron. En aquesta sala el mag acompanya el boss.}
 \label{fig:boss}
 \end{figure}
 
-Les figures~\ref{fig:falling} i~\ref{fig:boss} mostren, respectivament, la
-mecànica del terra que cau i la sala final amb el boss.
+Les figures~\ref{fig:falling} i~\ref{fig:boss} mostren, respectivament, una sala
+avançada amb trampes i la sala final amb el boss.
 
 \subsection{Assets i recursos externs}
 \label{sec:assets}
@@ -423,29 +422,6 @@ Pel que fa al \textbf{codi}, és \textbf{100\,\% propi}. Hem fet servir un
 videotutorial de YouTube (citat a la bibliografia) com a orientació per a
 plantejar el comportament dels enemics i del jugador, però \textbf{no hem
 reutilitzat cap línia de codi} de cap font externa.
-
-\subsection{Decisions de disseny}
-
-Algunes decisions concretes que hem pres o desestimat:
-
-\begin{itemize}[noitemsep]
-    \item \textbf{Presa:} moviment \textbf{casella a casella} (a saltirons) en
-    lloc de moviment lliure, per acostar-nos al \textit{Looty Dungeon} original.
-    En conseqüència es va \textbf{eliminar el dash} que teníem en una versió
-    prèvia.
-    \item \textbf{Presa:} definir les sales en \textbf{JSON}, cosa que en facilita
-    l'edició ràpida sense recompilar.
-    \item \textbf{Presa:} \textbf{generar per codi} els visuals del jugador i els
-    enemics sense model propi, evitant dependències pesades i permetent prototipar
-    el joc sencer abans de tenir tots els models.
-    \item \textbf{Presa:} \textbf{objectius per sala} (recollir monedes) com a
-    bonificació, i una \textbf{gràcia inicial} abans que el terra comenci a caure,
-    per no perdre vida només entrar.
-    \item \textbf{Desestimada:} \textit{leaderboard} en línia, substituïda per
-    persistència local de la millor partida amb \texttt{PlayerPrefs}.
-    \item \textbf{Desestimat:} sistema d'inventari i objectes consumibles, fora de
-    l'abast del projecte.
-\end{itemize}
 
 % ===== 3. Metodologia =====
 \section{Metodologia}

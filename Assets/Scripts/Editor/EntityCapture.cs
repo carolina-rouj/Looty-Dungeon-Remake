@@ -14,7 +14,6 @@ public static class EntityCapture
     private static readonly (string type, string file)[] Characters =
     {
         ("__player", "entity_player"),
-        ("Slime", "entity_slime"),
         ("Gnome", "entity_gnome"),
         ("Wizard", "entity_wizard"),
         ("Boss", "entity_boss"),
@@ -22,6 +21,7 @@ public static class EntityCapture
 
     private static readonly (string prefab, string file)[] Prefabs =
     {
+        ("Assets/Prefabs/Slime.prefab", "entity_slime"),
         ("Assets/Prefabs/Barrel.prefab", "entity_barrel"),
         ("Assets/Prefabs/BookshelfA.prefab", "entity_bookshelf"),
         ("Assets/Prefabs/Cauldron.prefab", "entity_cauldron"),
