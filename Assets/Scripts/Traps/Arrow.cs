@@ -28,9 +28,24 @@ public class Arrow : MonoBehaviour
         Destroy(gameObject, 5f);
     }
 
+    private static readonly Collider[] hitBuffer = new Collider[4];
+
     void FixedUpdate()
     {
         rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
+
+        // OnTriggerEnter no detecta CharacterController cuando el trigger se mueve hacia él.
+        // OverlapSphere sí lo encuentra directamente.
+        int count = Physics.OverlapSphereNonAlloc(rb.position, 0.25f, hitBuffer);
+        for (int i = 0; i < count; i++)
+        {
+            if (!hitBuffer[i].CompareTag("Player")) continue;
+            PlayerHealth ph = hitBuffer[i].GetComponent<PlayerHealth>();
+            if (ph == null) continue;
+            ph.TakeDamage(damage, transform.position);
+            Destroy(gameObject);
+            return;
+        }
     }
 
     void OnTriggerEnter(Collider other)

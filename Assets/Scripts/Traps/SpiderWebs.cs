@@ -4,9 +4,9 @@ public class SpiderWebs : MonoBehaviour
 {
     public enum WebState { Idle = 0, Partial = 1, Full = 2 }
 
-    public float idleDuration = 1.2f;
-    public float partialDuration = 1.2f;
-    public float fullDuration = 1.2f;
+    public float idleDuration = 3f;
+    public float partialDuration = 2.5f;
+    public float fullDuration = 2f;
     public float timeParalised = 1.5f;
     public GameObject tela1Prefab;
 
@@ -17,7 +17,7 @@ public class SpiderWebs : MonoBehaviour
     private Transform[] barTransforms;
     private float[] currentHeights;
 
-    const float lerpSpeed     = 6f;
+    const float lerpSpeed     = 2.5f;
     const float tubeThickness = 0.06f;
     const float floorSurface  = 1.0f;
 
