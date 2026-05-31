@@ -2,7 +2,7 @@
     "name": "Nivel Boss",
     "tamañoCasilla": 1.0,
     "grid": [
-        ".D...",
+        "..D..",
         "DDDDD",
         "DDcDD",
         "DDCDD",
