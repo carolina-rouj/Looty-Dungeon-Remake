@@ -435,9 +435,9 @@ public class DungeonGameRuntime : MonoBehaviour
 
     private Vector3 ComputeExitPosition(LevelManager manager)
     {
-        Transform tile = FindFloorTileNear(manager, new Vector3(0f, 0f, manager.MaxBoundZ));
+        Transform tile = FindFloorTileNear(manager, new Vector3(manager.tamañoCasilla, 0f, manager.MaxBoundZ));
         if (tile != null) return tile.position + Vector3.up * 0.1f;
-        return new Vector3(0f, 0.1f, manager.MaxBoundZ);
+        return new Vector3(manager.tamañoCasilla, 0.1f, manager.MaxBoundZ);
     }
 
     private Vector3 ComputeCameraFocus(LevelManager manager)
