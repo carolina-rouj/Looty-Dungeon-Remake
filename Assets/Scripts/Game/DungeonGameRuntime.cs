@@ -153,6 +153,7 @@ public class DungeonGameRuntime : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         runtimeAudio = gameObject.AddComponent<RuntimeDungeonAudio>();
+        gameObject.AddComponent<RuntimeTrapAudio>();
         LoadBestRun();
         CreatePlayer();
         ConfigureCamera();
@@ -232,7 +233,12 @@ public class DungeonGameRuntime : MonoBehaviour
         }
         else if (State == DungeonState.Victory)
         {
-            if (DungeonInput.Menu() || DungeonInput.Submit())
+            // R / Enter = jugar de nuevo; M / Esc = menu (Esc lo gestiona el bloque de arriba).
+            if (DungeonInput.Restart() || DungeonInput.Submit())
+            {
+                StartNewGame();
+            }
+            else if (DungeonInput.Menu())
             {
                 ShowMenu();
             }
@@ -682,6 +688,7 @@ public class DungeonGameRuntime : MonoBehaviour
             if (aliveEnemies.Remove(enemy))
             {
                 EnemiesDefeated++;
+                PlayEnemyDeath(enemy.transform.position);   // suena al morir (matado o caido)
                 TryDropHeart(enemy.transform.position);
             }
         }
@@ -877,9 +884,21 @@ public class DungeonGameRuntime : MonoBehaviour
 
     public void PlayEnemyDeath(Vector3 position)
     {
-        runtimeAudio.PlaySfx(RuntimeSfx.Hit);
+        runtimeAudio.PlaySfx(RuntimeSfx.EnemyDeath);
         RuntimeVfx.Burst(position + Vector3.up * 0.7f, new Color(1f, 0.35f, 0.15f), 24, 0.65f);
         RuntimeVfx.FloatingText(position + Vector3.up * 1.5f, "KO", new Color(1f, 0.38f, 0.16f));
+    }
+
+    // Sonidos de trampa (los dispara RuntimeTrapAudio observando las trampas de Carolina,
+    // sin tocar sus scripts).
+    public void PlayTrapArrow(Vector3 position)
+    {
+        runtimeAudio.PlaySfx(RuntimeSfx.ArrowShoot);
+    }
+
+    public void PlayTrapSpikes(Vector3 position)
+    {
+        runtimeAudio.PlaySfx(RuntimeSfx.Spikes);
     }
 
     public void PlayEnemyHit(Vector3 position)
