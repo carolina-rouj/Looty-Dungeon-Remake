@@ -8,7 +8,7 @@ public class RetractileFork : MonoBehaviour
     public float idleDuration = 1f;
     public float extendDuration = 0.25f;
     public float retractDuration = 0.25f;
-    public float extendDistance = 0.8f;  // cuánto avanza el fork (eje +X local)
+    public float extendDistance = 1.1f;  // cuánto avanza el fork (eje +X local)
     public int damage = 1;
 
     private ForkState state = ForkState.Idle;
@@ -69,7 +69,7 @@ public class RetractileFork : MonoBehaviour
         };
     }
 
-    void OnTriggerEnter(Collider other)
+    void OnTriggerStay(Collider other)
     {
         if (state == ForkState.Idle) return;
 

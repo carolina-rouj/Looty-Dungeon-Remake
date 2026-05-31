@@ -17,12 +17,12 @@ public class ArrowTrap : MonoBehaviour
     {
         if (diana != null) distanceToDiana = (int)Vector3.Distance(transform.position, diana.position);
         shootInterval = Mathf.Max(0.5f, distanceToDiana * 0.5f);
+        shooting = true;
     }
 
     void Update()
     {
-        // TODO: descomentar cuando se integre el Player — dispara solo si jugador está en diana
-        // if (!shooting) return;
+        if (!shooting) return;
         timer -= Time.deltaTime;
         if (timer <= 0f)
         {
@@ -52,5 +52,7 @@ public class ArrowTrap : MonoBehaviour
             arrowScript.damage = damage;
             arrowScript.speed = arrowSpeed;
         }
+
+        Destroy(arrow, distanceToDiana / arrowSpeed);
     }
 }

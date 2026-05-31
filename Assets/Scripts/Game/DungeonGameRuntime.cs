@@ -248,7 +248,7 @@ public class DungeonGameRuntime : MonoBehaviour
         int levelKey = DungeonInput.LevelKeyPressed();
         if (levelKey >= 0 && levelKey < levelNames.Length)
         {
-            JumpToLevel(levelKey);
+            JumpToLevel((levelKey + 9) % 10);
         }
     }
 
@@ -891,7 +891,8 @@ public class DungeonGameRuntime : MonoBehaviour
 
     public void PlayTrapActivated(Vector3 position, string trapType)
     {
-        runtimeAudio.PlaySfx(RuntimeSfx.Trap);
+        RuntimeSfx sfx = trapType == "Slime" ? RuntimeSfx.Slime : RuntimeSfx.Trap;
+        runtimeAudio.PlaySfx(sfx);
         Color color = trapType == "Flame"
             ? new Color(1f, 0.32f, 0.05f)
             : new Color(0.84f, 0.84f, 0.72f);

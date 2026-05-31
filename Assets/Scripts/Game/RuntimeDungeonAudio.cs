@@ -46,6 +46,8 @@ public class RuntimeDungeonAudio : MonoBehaviour
             { RuntimeSfx.Cast, Sweep("Cast", 660f, 990f, 0.18f, 0.32f, Wave.Square) },
             // Trampa: chasquido metalico.
             { RuntimeSfx.Trap, Thud("Trap", 0.08f, 0.45f) },
+            // Slime: barrido de ruido descendente (chapoteo/squelch humedo).
+            { RuntimeSfx.Slime, Arp("Slime", new[] { 150f, 260f, 200f, 320f, 180f }, 0.06f, 0.45f, Wave.Triangle) },
             // Suelo que cae: retumbo grave.
             { RuntimeSfx.FloorFall, Buzz("FloorFall", 70f, 0.4f, 0.5f) },
             // Game over: arpegio descendente triste.
@@ -226,5 +228,6 @@ public enum RuntimeSfx
     Trap,
     FloorFall,
     GameOver,
-    Victory
+    Victory,
+    Slime
 }
