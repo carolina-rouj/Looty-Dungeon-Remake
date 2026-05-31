@@ -426,11 +426,34 @@ public class DungeonGameRuntime : MonoBehaviour
     // coordenadas de mundo (no relativas al transform del LevelManager).
     private Vector3 ComputePlayerSpawn(LevelManager manager)
     {
-        // Colocamos al jugador sobre un tile de suelo REAL del frente del nivel para que
-        // no aparezca en el vacio y caiga (lo que le drenaria la vida al instante).
-        Transform tile = FindFloorTileNear(manager, new Vector3(0f, 0f, manager.MinBoundZ));
-        if (tile != null) return tile.position + Vector3.up * 0.9f;
+        // Aparecemos en el tile de suelo REAL mas CENTRADO y mas hacia el FRENTE del nivel.
+        // Antes cogiamos el mas cercano al frente-centro, pero en niveles cuya primera fila
+        // tiene un hueco en el centro (p.ej. el 8, fila ".B...") eso dejaba al jugador en un
+        // tile suelto del borde, fácil de caerse al vacio. Priorizando |x| (columna central)
+        // y luego la cercania al frente, aparece siempre en una casilla central y solida.
+        Transform best = FindSpawnFloorTile(manager);
+        if (best != null) return best.position + Vector3.up * 0.9f;
         return new Vector3(0f, 0.9f, manager.MinBoundZ);
+    }
+
+    // Tile de suelo para el spawn: el de columna mas central (|x| minimo) y, a igualdad,
+    // el mas adelantado (z mas cerca del frente MinBoundZ). Ignora tiles que ya caen.
+    private static Transform FindSpawnFloorTile(LevelManager manager)
+    {
+        int floorLayer = LayerMask.NameToLayer("Floor");
+        Transform best = null;
+        float bestCost = float.MaxValue;
+        foreach (Transform child in manager.transform)
+        {
+            if (child.gameObject.layer != floorLayer) continue;
+            if (child.GetComponent<Rigidbody>() != null) continue;
+            Collider c = child.GetComponent<Collider>();
+            if (c != null && !c.enabled) continue;
+            // |x| domina (centro); la distancia al frente desempata (mas adelantado mejor).
+            float cost = Mathf.Abs(child.position.x) * 100f + (child.position.z - manager.MinBoundZ);
+            if (cost < bestCost) { bestCost = cost; best = child; }
+        }
+        return best;
     }
 
     private Vector3 ComputeExitPosition(LevelManager manager)
@@ -468,10 +491,19 @@ public class DungeonGameRuntime : MonoBehaviour
         // Reparte sin repetir tile, asi no se apilan dos monedas en la misma casilla.
         HashSet<Transform> used = new HashSet<Transform>();
         int safety = 0;
-        while (used.Count < count && safety++ < count * 6)
+        while (used.Count < count && safety++ < count * 12)
         {
             Transform tile = floors[Random.Range(0, floors.Count)];
             if (!used.Add(tile)) continue;
+            // No soltar la moneda encima de una decoracion/trampa/pared (el tile se llama
+            // "Tile_c_r"): asi no aparecen monedas montadas sobre el caliz, barriles, etc.
+            string[] parts = tile.name.Split('_');
+            if (parts.Length == 3 && int.TryParse(parts[1], out int tcol) && int.TryParse(parts[2], out int trow)
+                && manager.IsCellOccupied(tcol, trow))
+            {
+                used.Remove(tile);
+                continue;
+            }
             // La moneda se cuelga del tile: cuando el tile se cae (suelo que cae de
             // Carolina), la moneda cae con el; cuando el tile se destruye, la moneda tambien.
             CoinPickup.Create(tile);
@@ -568,7 +600,7 @@ public class DungeonGameRuntime : MonoBehaviour
             0 => "Atrios de la mazmorra",
             1 => "Galerias profundas",
             2 => "Catacumbas oscuras",
-            _ => "Salon del boss"
+            _ => "Sala final"
         };
     }
 
@@ -681,8 +713,8 @@ public class DungeonGameRuntime : MonoBehaviour
         string obj = g.type == ObjectiveType.CollectCoins
             ? "Recoge " + g.amount + " monedas"
             : (boss ? "Derrota al boss" : "Derrota a todos los enemigos");
-        string extra = index == 2 ? "  ·  ¡el suelo empieza a caer!" : "";
-        return "Sala " + (index + 1) + "/10  —  " + obj + "  (reto: <" + Mathf.RoundToInt(g.targetSeconds) + "s)" + extra;
+        string extra = index == 2 ? "\n¡El suelo empieza a caer!" : "";
+        return "Sala " + (index + 1) + "/10:  " + obj + "\nReto: menos de " + Mathf.RoundToInt(g.targetSeconds) + "s" + extra;
     }
 
     public void NotifyEnemyDefeated(GameObject enemy)
@@ -1069,7 +1101,7 @@ public class DungeonGameRuntime : MonoBehaviour
 
         // Compuerta FUNCIONAL (invisible): bloquea hasta cumplir el objetivo y luego se
         // vuelve trigger para pasar de sala. El VISUAL de la puerta lo pone el JSON de cada
-        // nivel (pared "type": "Door") — tanto en los de Carolina como en los mios, que ahora
+        // nivel (pared "type": "Door"): tanto en los de Carolina como en los mios, que ahora
         // usan su mismo esquema (puerta en col2, fila N-2, con suelo detras). Asi no hay
         // vacio ante la puerta ni se pierde vida al cruzar.
         GameObject doorObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1093,15 +1125,19 @@ public class DungeonGameRuntime : MonoBehaviour
 
         if (State == DungeonState.Menu)
         {
-            Rect panel = DrawCenteredPanel(540f, 400f);
-            LabelShadow(PanelRect(panel, 20f, 20f, 500f, 70f), "Looty Dungeon 3D", titleStyle);
-            GUI.Label(PanelRect(panel, 28f, 92f, 484f, 108f), "WASD/flechas: moverte casilla a casilla.  Espacio o click: atacar.\nP o Esc: pausa.  0-9: saltar a salas.", bodyStyle);
+            Rect panel = DrawCenteredPanel(620f, 480f);
+            LabelShadow(PanelRect(panel, 40f, 30f, 540f, 72f), "Looty Dungeon 3D", titleStyle);
+            GUI.Label(PanelRect(panel, 50f, 116f, 520f, 132f),
+                "Muevete casilla a casilla con WASD o las flechas.\n" +
+                "Ataca con Espacio o con clic.\n" +
+                "Pausa con P o Esc.\n" +
+                "Salta a cualquier sala con las teclas 0-9.", bodyStyle);
             string bestLine = (BestCoins > 0 || BestVictorySeconds > 0f)
-                ? "Mejor partida: " + BestCoins + " monedas" + (BestVictorySeconds > 0f ? "  -  Victoria " + FormatSeconds(BestVictorySeconds) : "")
+                ? "Mejor partida: " + BestCoins + " monedas" + (BestVictorySeconds > 0f ? "  ·  Victoria en " + FormatSeconds(BestVictorySeconds) : "")
                 : "Sin partidas previas guardadas.";
-            GUI.Label(PanelRect(panel, 28f, 208f, 484f, 32f), bestLine, bodyStyle);
-            if (GUI.Button(PanelCenteredRect(panel, 256f, 220f, 46f), "Jugar", buttonStyle)) StartNewGame();
-            if (GUI.Button(PanelCenteredRect(panel, 316f, 220f, 46f), "Creditos", buttonStyle)) ShowCredits();
+            GUI.Label(PanelRect(panel, 50f, 256f, 520f, 32f), bestLine, bodyStyle);
+            if (GUI.Button(PanelCenteredRect(panel, 312f, 240f, 52f), "Jugar", buttonStyle)) StartNewGame();
+            if (GUI.Button(PanelCenteredRect(panel, 376f, 240f, 52f), "Creditos", buttonStyle)) ShowCredits();
             return;
         }
 
@@ -1180,7 +1216,7 @@ public class DungeonGameRuntime : MonoBehaviour
 
         // Linea de OBJETIVO de la sala (dorado), debajo de la barra.
         string objText = aliveEnemies.Count == 0 && IsObjectiveComplete()
-            ? "Objetivo cumplido \u2014 \u00A1cruza la puerta!"
+            ? "\u00A1Objetivo cumplido!  Cruza la puerta"
             : "Objetivo: " + ObjectiveDescription();
         Rect objRect = new Rect(margin + 4f * scale, bar.yMax + 6f * scale, Screen.width - margin * 2f - 8f * scale, 26f * scale);
         LabelShadow(objRect, objText, hudSubStyle);
@@ -1189,10 +1225,10 @@ public class DungeonGameRuntime : MonoBehaviour
 
         if (Time.time < messageUntil)
         {
-            float messageWidth = Mathf.Min(560f * scale, Screen.width - 32f * scale);
-            Rect msgRect = new Rect(Screen.width * 0.5f - messageWidth * 0.5f, Screen.height * 0.13f, messageWidth, 44f * scale);
-            DrawPanel(new Rect(msgRect.x - 12f * scale, msgRect.y - 4f * scale, msgRect.width + 24f * scale, msgRect.height + 8f * scale));
-            GUIStyle msgStyle = new GUIStyle(hudStyle) { alignment = TextAnchor.MiddleCenter };
+            float messageWidth = Mathf.Min(640f * scale, Screen.width - 32f * scale);
+            Rect msgRect = new Rect(Screen.width * 0.5f - messageWidth * 0.5f, Screen.height * 0.13f, messageWidth, 68f * scale);
+            DrawPanel(new Rect(msgRect.x - 16f * scale, msgRect.y - 8f * scale, msgRect.width + 32f * scale, msgRect.height + 16f * scale));
+            GUIStyle msgStyle = new GUIStyle(hudStyle) { alignment = TextAnchor.MiddleCenter, wordWrap = true };
             LabelShadow(msgRect, message, msgStyle);
         }
         DrawSectionBanner(scale);
@@ -1687,7 +1723,7 @@ public class DungeonGameRuntime : MonoBehaviour
         {
             font = uiFont,
             alignment = TextAnchor.MiddleCenter,
-            fontSize = Mathf.RoundToInt(19 * scale),
+            fontSize = Mathf.RoundToInt(21 * scale),
             wordWrap = true,
             richText = true,
             normal = { textColor = UiText }
@@ -1766,10 +1802,15 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         if (uiFontTried) return;
         uiFontTried = true;
-        // Usamos la fuente por defecto de Unity (GUI.skin.font): cargar una fuente del SO
-        // con CreateDynamicFontFromOSFont fallaba en esta instalacion ("Unable to load font
-        // face"), dejando el texto diminuto/invisible. La de defecto SIEMPRE renderiza.
-        uiFont = GUI.skin != null ? GUI.skin.font : null;
+        // Fuente INCLUIDA en el proyecto (Assets/Resources/Fonts/UiFont.ttf, Open Sans): se
+        // empaqueta con el juego, asi que SIEMPRE carga (no depende de fuentes del SO, que
+        // fallaban con "Unable to load font face" dejando el texto invisible). Si por lo que
+        // fuera no cargara, caemos a la fuente por defecto de Unity, que siempre renderiza.
+        uiFont = Resources.Load<Font>("Fonts/UiFont");
+        if (uiFont == null)
+        {
+            uiFont = GUI.skin != null ? GUI.skin.font : null;
+        }
     }
 
     // Texto con sombra para que se lea limpio sobre cualquier fondo.

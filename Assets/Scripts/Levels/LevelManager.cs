@@ -201,7 +201,7 @@ public class LevelManager : MonoBehaviour
                 };
                 if (prefabToUse == null) continue;
 
-                // SpiderWebs trap provides its own floor block — skip the normal tile
+                // SpiderWebs trap provides its own floor block, so skip the normal tile
                 if (levelData.traps != null)
                 {
                     bool replaced = false;
@@ -539,6 +539,27 @@ public class LevelManager : MonoBehaviour
                p.x <=  MaxBoundX + tamañoCasilla * 0.5f &&
                p.z >=  MinBoundZ - tamañoCasilla * 0.5f &&
                p.z <=  MaxBoundZ + tamañoCasilla * 0.5f;
+    }
+
+    // Mateus: ¿hay una decoracion, trampa o pared en esta casilla? Sirve para no soltar
+    // monedas encima de un caliz / barril / trampa, etc. (que quedaban montados unos sobre
+    // otros). No cuenta enemigos porque se mueven y dejan la casilla libre.
+    public bool IsCellOccupied(int col, int row)
+    {
+        if (levelData == null) return false;
+        if (levelData.decorations != null)
+            foreach (var d in levelData.decorations)
+                if (d.col == col && d.row == row) return true;
+        if (levelData.walls != null)
+            foreach (var w in levelData.walls)
+                if (w.col == col && w.row == row) return true;
+        if (levelData.traps != null)
+            foreach (var t in levelData.traps)
+            {
+                if (t.col == col && t.row == row) return true;
+                if (t.type == "ArrowShoot" && t.dianaCol == col && t.dianaRow == row) return true;
+            }
+        return false;
     }
 
     // Mateus: registra un objeto para que CAIGA junto con su fila cuando el suelo se

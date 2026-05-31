@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Reproduce sonidos de las trampas de Carolina (flecha al dispararse, pinchos al subir)
-// OBSERVANDO su estado, sin modificar sus scripts (ArrowTrap/RetractileFork/Arrow) — asi no
+// OBSERVANDO su estado, sin modificar sus scripts (ArrowTrap/RetractileFork/Arrow): asi no
 // chocamos con su trabajo en curso sobre las trampas. Vive en el GameObject del runtime.
 public class RuntimeTrapAudio : MonoBehaviour
 {
