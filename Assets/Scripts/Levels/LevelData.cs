@@ -28,6 +28,9 @@ public class TrapSpawn
     public string type;
     public int col;
     public int row;
+    public int dianaCol;
+    public int dianaRow;
+    public float rotation; // rotación Y del contenedor en grados (usado por RetractileFork)
 }
 
 [Serializable]

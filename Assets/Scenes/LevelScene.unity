@@ -160,8 +160,12 @@ MonoBehaviour:
   gnomePrefab: {fileID: 1679084229916716241, guid: 2725767684cf41f69aa70065b2b25c4f, type: 3}
   bossPrefab: {fileID: 8107923519241200909, guid: 369fac574b4b42b185b0c74eb3ba4eab, type: 3}
   rastroSlimePrefab: {fileID: 4834583842880920505, guid: 1ea88906e64c4b90b864fb6ccfe82ec1, type: 3}
-  spiderWebsPrefab: {fileID: 0}
-  retractileForkPrefab: {fileID: 0}
+  spiderWebsPrefab: {fileID: 5912692336106184527, guid: 0c3116bb8d32080dc8d9507941122c10, type: 3}
+  forkContainerPrefab: {fileID: 2954982618747726658, guid: 6ae389a9c6b6a078a921040160bbd9f8, type: 3}
+  forkMeshPrefab: {fileID: 1877241961922116551, guid: 632f7716e0e33502a9329321693e945a, type: 3}
+  arrowShootPrefab: {fileID: 200000001, guid: 3bd02d2071f0b918e969fc00c31bf49f, type: 3}
+  dianaPrefab: {fileID: 300000001, guid: deda19d75450ee771a2eab5479aad4c9, type: 3}
+  arrowProjectilePrefab: {fileID: 5316823834006775842, guid: 7045de76d2e27f04ca65eba563c03527, type: 3}
   wallPlainPrefab: {fileID: 430671460673478268, guid: 41a23889f61a369c39285995f449c151, type: 3}
   wallDoorPrefab: {fileID: 3639119380977534797, guid: 0c1b943a7015ffdf69cd373dd14affe9, type: 3}
   doorPrefab: {fileID: 3211107001200024193, guid: 1a70a6011ecb879ef8432b14ce7b9ff5, type: 3}
