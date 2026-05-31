@@ -488,6 +488,11 @@ public class DungeonGameRuntime : MonoBehaviour
         foreach (Transform child in manager.transform)
         {
             if (child.gameObject.layer != floorLayer) continue;
+            // No reaparecer sobre un tile que YA se esta cayendo (tiene Rigidbody) o cuyo
+            // collider ya se desactivo: nos llevaria a caer otra vez y perder otra vida.
+            if (child.GetComponent<Rigidbody>() != null) continue;
+            Collider c = child.GetComponent<Collider>();
+            if (c != null && !c.enabled) continue;
             float sqr = (child.position - reference).sqrMagnitude;
             if (sqr < bestSqr) { bestSqr = sqr; best = child; }
         }

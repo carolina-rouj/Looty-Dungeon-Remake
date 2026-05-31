@@ -248,6 +248,7 @@ public class LevelManager : MonoBehaviour
             GameObject w = Instantiate(wallPrefab, pos, rot);
             w.transform.localScale = scale;
             spawnedObjects.Add(w);
+            RegisterRowObject(w, spawn.row);   // que la pared caiga con su fila
 
             if (isDoor && doorPrefab != null)
             {
@@ -304,7 +305,9 @@ public class LevelManager : MonoBehaviour
             }
             Vector3 trapPos = GridToWorld(spawn.col, spawn.row);
             trapPos.y = levelData.floorYOffset;
-            spawnedObjects.Add(Instantiate(prefab, trapPos, Quaternion.identity));
+            GameObject trapGo = Instantiate(prefab, trapPos, Quaternion.identity);
+            spawnedObjects.Add(trapGo);
+            RegisterRowObject(trapGo, spawn.row);
         }
     }
 
@@ -352,6 +355,8 @@ public class LevelManager : MonoBehaviour
 
         spawnedObjects.Add(shooter);
         spawnedObjects.Add(diana);
+        RegisterRowObject(shooter, spawn.row);
+        RegisterRowObject(diana, spawn.dianaRow);
     }
 
     void SpawnRetractileFork(TrapSpawn spawn)
@@ -391,6 +396,7 @@ public class LevelManager : MonoBehaviour
         objectsByRow[spawn.row].Add(root);
 
         spawnedObjects.Add(root);
+        RegisterRowObject(root, spawn.row);
     }
 
     void SpawnSpiderWebs(TrapSpawn spawn)
@@ -423,6 +429,7 @@ public class LevelManager : MonoBehaviour
         objectsByRow[spawn.row].Add(root);
 
         spawnedObjects.Add(root);
+        RegisterRowObject(root, spawn.row);
     }
 
     void SpawnDecorations()
@@ -526,9 +533,27 @@ public class LevelManager : MonoBehaviour
                p.z <=  MaxBoundZ + tamañoCasilla * 0.5f;
     }
 
+    // Mateus: registra un objeto para que CAIGA junto con su fila cuando el suelo se
+    // desploma (mismo mecanismo que enemigos/decoraciones). Asi trampas y obstaculos no
+    // quedan flotando en el vacio: todo tiene "gravedad" cuando se cae el suelo.
+    void RegisterRowObject(GameObject go, int row)
+    {
+        if (go == null) return;
+        if (!objectsByRow.ContainsKey(row))
+            objectsByRow[row] = new List<GameObject>();
+        objectsByRow[row].Add(go);
+    }
+
+    // Mateus: gracia inicial antes de que el suelo EMPIECE a caer. Antes la primera fila
+    // (donde aparece el jugador) se desplomaba a los ~2s de entrar, y se perdia una vida
+    // nada mas empezar el nivel. Con esto el jugador tiene tiempo de orientarse y arrancar.
+    private const float StartFallGrace = 5f;
+
     // codigo para que el suelo caiga por filas
     IEnumerator FallingFloors()
     {
+        yield return new WaitForSeconds(StartFallGrace);
+
         for (int r = 0; r < gridRows; r++)
         {
             yield return new WaitForSeconds(2f);   // pausa silenciosa antes del aviso
