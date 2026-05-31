@@ -203,6 +203,15 @@ public class LevelManager : MonoBehaviour
                 };
                 if (prefabToUse == null) continue;
 
+                // SpiderWebs trap provides its own floor block — skip the normal tile
+                if (levelData.traps != null)
+                {
+                    bool replaced = false;
+                    foreach (var t in levelData.traps)
+                        if (t.type == "SpiderWebs" && t.col == c && t.row == r) { replaced = true; break; }
+                    if (replaced) continue;
+                }
+
                 Vector3 tilePos = GridToWorld(c, r);
                 tilePos.y = levelData.floorYOffset;
                 GameObject tile = Instantiate(prefabToUse, tilePos, Quaternion.identity, transform);
@@ -283,6 +292,11 @@ public class LevelManager : MonoBehaviour
                 SpawnRetractileFork(spawn);
                 continue;
             }
+            if (spawn.type == "SpiderWebs")
+            {
+                SpawnSpiderWebs(spawn);
+                continue;
+            }
             if (!trapPrefabs.TryGetValue(spawn.type, out GameObject prefab) || prefab == null)
             {
                 Debug.LogWarning($"[LevelManager] Prefab de trampa '{spawn.type}' no asignado.");
@@ -361,6 +375,25 @@ public class LevelManager : MonoBehaviour
         col.isTrigger = true;
         col.size   = new Vector3(0.8f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
         col.center = new Vector3(0.4f, 0f, 0f);      // delante del contenedor
+
+        spawnedObjects.Add(root);
+    }
+
+    void SpawnSpiderWebs(TrapSpawn spawn)
+    {
+        Vector3 pos = GridToWorld(spawn.col, spawn.row);
+        pos.y = levelData.floorYOffset;
+
+        GameObject root = new GameObject("SpiderWebs");
+        root.transform.position = pos;
+
+        BoxCollider col = root.AddComponent<BoxCollider>();
+        col.isTrigger = true;
+        col.size   = new Vector3(0.85f, 1.0f, 0.85f);
+        col.center = new Vector3(0f, 1.5f, 0f);
+
+        SpiderWebs script = root.AddComponent<SpiderWebs>();
+        script.tela1Prefab = spiderWebsPrefab;
 
         spawnedObjects.Add(root);
     }
