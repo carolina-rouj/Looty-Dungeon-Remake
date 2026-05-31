@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Construye un visual procedural (primitivas) para los enemigos de Carolina, al estilo
-// del PlayerVisualBuilder que a ella le gusto. Asi Bat/Wizard/Gnome/Boss tienen un look
+// del PlayerVisualBuilder que a ella le gusto. Asi Slime/Wizard/Gnome/Boss tienen un look
 // sin necesidad de modelar prefabs a mano. La logica de cada enemigo es la de Carolina.
 public static class EnemyVisualBuilder
 {
@@ -9,7 +9,6 @@ public static class EnemyVisualBuilder
     {
         switch (type)
         {
-            case "Bat":    BuildBat(root);    break;
             case "Wizard": BuildWizard(root); break;
             case "Gnome":  BuildGnome(root);  break;
             case "Boss":   BuildBoss(root);   break;
@@ -35,16 +34,6 @@ public static class EnemyVisualBuilder
         CreatePart(visual, PrimitiveType.Sphere, "Slime Eye L", new Vector3(-0.14f, 0.52f, 0.32f), Vector3.one * 0.10f, new Color(0.04f, 0.05f, 0.06f));
         CreatePart(visual, PrimitiveType.Sphere, "Slime Eye R", new Vector3(0.14f, 0.52f, 0.32f), Vector3.one * 0.10f, new Color(0.04f, 0.05f, 0.06f));
         CreatePart(visual, PrimitiveType.Cube, "Slime Mouth", new Vector3(0f, 0.34f, 0.36f), new Vector3(0.22f, 0.06f, 0.04f), new Color(0.10f, 0.20f, 0.10f));
-    }
-
-    private static void BuildBat(Transform root)
-    {
-        Transform visual = CreateVisualRoot(root, 0.12f, 6f);
-        CreatePart(visual, PrimitiveType.Capsule, "Bat Body", new Vector3(0f, 0.62f, 0f), new Vector3(0.46f, 0.38f, 0.46f), new Color(0.34f, 0.16f, 0.48f));
-        CreatePart(visual, PrimitiveType.Cube, "Bat Wing L", new Vector3(-0.48f, 0.62f, 0f), new Vector3(0.7f, 0.08f, 0.28f), new Color(0.18f, 0.08f, 0.28f));
-        CreatePart(visual, PrimitiveType.Cube, "Bat Wing R", new Vector3(0.48f, 0.62f, 0f), new Vector3(0.7f, 0.08f, 0.28f), new Color(0.18f, 0.08f, 0.28f));
-        CreatePart(visual, PrimitiveType.Sphere, "Bat Eye L", new Vector3(-0.11f, 0.72f, 0.27f), Vector3.one * 0.09f, new Color(1f, 0.18f, 0.08f));
-        CreatePart(visual, PrimitiveType.Sphere, "Bat Eye R", new Vector3(0.11f, 0.72f, 0.27f), Vector3.one * 0.09f, new Color(1f, 0.18f, 0.08f));
     }
 
     // Mago = tunica acampanada, barba blanca, sombrero puntiagudo con estrella y baston con

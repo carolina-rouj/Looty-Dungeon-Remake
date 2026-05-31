@@ -17,7 +17,8 @@
       "#####"
     ],
     "enemies": [
-      { "type": "Slime", "col": 3, "row": 3 }
+      { "type": "Slime", "col": 3, "row": 3 },
+      { "type": "Gnome", "col": 2, "row": 4 }
     ],
     "traps": [],
     "walls": [

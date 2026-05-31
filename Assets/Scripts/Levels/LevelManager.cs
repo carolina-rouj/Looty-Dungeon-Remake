@@ -13,7 +13,6 @@ public class LevelManager : MonoBehaviour
 
     // Enemigos del nivel
     public GameObject slimePrefab;
-    public GameObject batPrefab;
     public GameObject wizardPrefab;
     public GameObject gnomePrefab;
     public GameObject bossPrefab;
@@ -79,7 +78,6 @@ public class LevelManager : MonoBehaviour
         enemyPrefabs = new Dictionary<string, GameObject>
         {
             { "Slime",  slimePrefab  },
-            { "Bat",    batPrefab    },
             { "Wizard", wizardPrefab },
             { "Gnome",  gnomePrefab  },
             { "Boss",   bossPrefab   },
@@ -449,6 +447,16 @@ public class LevelManager : MonoBehaviour
             if (spawn.scale != 1f)
                 decoration.transform.localScale *= spawn.scale;
             spawnedObjects.Add(decoration);
+
+            // Dar colisión a las decoraciones que no traen collider del prefab.
+            // El box se ancla en world Y=0 (suelo) hasta Y=1.2, independientemente de
+            // la altura de spawn, para que el slime pueda detectarlo en ambas alturas.
+            if (spawn.type != "Carpet" && decoration.GetComponent<Collider>() == null)
+            {
+                BoxCollider box = decoration.AddComponent<BoxCollider>();
+                box.center = new Vector3(0f, 0.6f - pos.y, 0f);
+                box.size   = new Vector3(0.7f, 1.2f, 0.7f);
+            }
 
             if (spawn.type == "FloorTorch" && floorTorchFirePrefab != null)
             {

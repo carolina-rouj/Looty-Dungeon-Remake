@@ -14,8 +14,7 @@
     "#####"
   ],
   "enemies": [
-    { "type": "Slime", "col": 1, "row": 3 },
-    { "type": "Bat",   "col": 3, "row": 6 }
+    { "type": "Slime", "col": 1, "row": 3 }
   ],
   "traps": [
     { "type": "ArrowShoot", "col": 0, "row": 5, "dianaCol": 4, "dianaRow": 5 },

@@ -28,10 +28,11 @@ public class Slime : MonoBehaviour
         targetScale = normalScale;
         obstacleLayerMask = ~LayerMask.GetMask("Floor");
 
-        // Alinear al centro de casilla más cercano al inicio
+        // Alinear al centro de casilla más cercano al inicio y fijar Y correcta
         if (LevelManager.Instance != null)
         {
             Vector3 snapped = LevelManager.Instance.SnapToGrid(transform.position);
+            snapped.y = LevelManager.Instance.enemySpawnHeight;
             transform.position = snapped;
             targetPosition     = snapped;
             lastPosition       = snapped;
@@ -65,17 +66,25 @@ public class Slime : MonoBehaviour
         ShuffleDirections();
 
         int floorMask = LayerMask.GetMask("Floor");
+        Physics.SyncTransforms(); // asegurar posiciones actualizadas antes de los OverlapSphere
         bool found = false;
         foreach (Vector3 dir in directions)
         {
             Vector3 candidate = transform.position + dir * tamañoCasilla;
 
-            // Check obstáculos
-            Collider[] hits = Physics.OverlapSphere(candidate, 0.3f, obstacleLayerMask);
+            // Check obstáculos a altura del slime (otros enemigos, decoraciones)
             bool blocked = false;
+            Collider[] hits = Physics.OverlapSphere(candidate, 0.4f, obstacleLayerMask);
             foreach (Collider c in hits)
-            {
                 if (c.gameObject != gameObject) { blocked = true; break; }
+
+            // También a nivel del suelo: detecta paredes cortas que no llegan a la altura del slime
+            if (!blocked)
+            {
+                Collider[] floorHits = Physics.OverlapSphere(
+                    new Vector3(candidate.x, 0f, candidate.z), 0.4f, obstacleLayerMask);
+                foreach (Collider c in floorHits)
+                    if (c.gameObject != gameObject) { blocked = true; break; }
             }
             if (blocked) continue;
 
@@ -87,7 +96,12 @@ public class Slime : MonoBehaviour
             Vector3 snapped = LevelManager.Instance != null
                 ? LevelManager.Instance.SnapToGrid(candidate)
                 : candidate;
-            groundPosition = new Vector3(snapped.x, transform.position.y, snapped.z);
+            if (LevelManager.Instance != null && !LevelManager.Instance.IsInBounds(snapped))
+                continue;
+            float groundY = LevelManager.Instance != null
+                ? LevelManager.Instance.enemySpawnHeight
+                : transform.position.y;
+            groundPosition = new Vector3(snapped.x, groundY, snapped.z);
             found = true;
             break;
         }

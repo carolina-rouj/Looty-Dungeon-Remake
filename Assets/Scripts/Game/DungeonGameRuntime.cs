@@ -535,7 +535,6 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         List<MonoBehaviour> result = new List<MonoBehaviour>();
         result.AddRange(FindObjectsByType<Slime>(FindObjectsSortMode.None));
-        result.AddRange(FindObjectsByType<Bat>(FindObjectsSortMode.None));
         result.AddRange(FindObjectsByType<Wizard>(FindObjectsSortMode.None));
         result.AddRange(FindObjectsByType<Gnome>(FindObjectsSortMode.None));
         result.AddRange(FindObjectsByType<Boss>(FindObjectsSortMode.None));
@@ -1647,7 +1646,6 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         HashSet<GameObject> enemies = new HashSet<GameObject>();
         foreach (Slime enemy in FindObjectsByType<Slime>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
-        foreach (Bat enemy in FindObjectsByType<Bat>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
         foreach (Wizard enemy in FindObjectsByType<Wizard>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
         foreach (Gnome enemy in FindObjectsByType<Gnome>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);
         foreach (Boss enemy in FindObjectsByType<Boss>(FindObjectsSortMode.None)) enemies.Add(enemy.gameObject);

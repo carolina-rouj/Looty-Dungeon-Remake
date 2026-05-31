@@ -1,53 +1,196 @@
+using System.Collections;
 using UnityEngine;
 
 public class Wizard : MonoBehaviour
 {
-    public float speed = 3.0f;
+    public float timeWaitMove   = 0.6f;
+    public float speed          = 3.0f;
     public float detectionRange = 5.0f;
-    public float rotationSpeed = 5.0f;
+    public float scaleSpeed     = 10f;
     public Animator ani;
-    // TODO (player): public GameObject targetPlayer;
 
-    private int lives = 3;
+    private Transform player;
+    private float tamañoCasilla;
+    private bool movementActive = false;
+    private bool isLanding      = false;
+    private bool isPreJumping   = false;
+    private float timer         = 0f;
+    private Vector3 targetPosition, lastPosition, groundPosition;
+    private Vector3 normalScale, targetScale;
+    private int obstacleLayerMask;
+    private readonly Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.right, Vector3.left };
 
     void Start()
     {
         ani = GetComponent<Animator>();
-        // TODO (player): targetPlayer = GameObject.Find("Player");
+        normalScale = transform.localScale;
+        targetScale = normalScale;
+        obstacleLayerMask = ~LayerMask.GetMask("Floor");
+        tamañoCasilla = LevelManager.Instance != null ? LevelManager.Instance.tamañoCasilla : 1f;
+
+        var pm = FindObjectOfType<PlayerMovement>();
+        if (pm != null) player = pm.transform;
+
+        if (LevelManager.Instance != null)
+        {
+            Vector3 snapped = LevelManager.Instance.SnapToGrid(transform.position);
+            snapped.y = LevelManager.Instance.enemySpawnHeight;
+            transform.position = snapped;
+            targetPosition = snapped;
+            lastPosition   = snapped;
+        }
+        else
+        {
+            targetPosition = transform.position;
+            lastPosition   = transform.position;
+        }
     }
 
-    void MoveWizard()
-    {
-        // TODO (player): descomentar cuando el player esté implementado
-        // if (Vector3.Distance(transform.position, targetPlayer.transform.position) > detectionRange)
-        // {
-        //     ani.SetBool("movementActive", false);
-        // }
-        // else
-        // {
-        //     Vector3 lookPos = targetPlayer.transform.position - transform.position;
-        //     lookPos.y = 0;
-        //     Quaternion targetRotation = Quaternion.LookRotation(lookPos);
-        //     transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime * 100f);
-        //     ani.SetBool("movementActive", true);
-        //     transform.Translate(Vector3.forward * speed * Time.deltaTime);
-        // }
-    }
+    // --- Daño y muerte ---
 
-    public void Hurt()
-    {
-        --lives;
-        if (lives <= 0) Die();
-    }
+    public void Hurt() => Die();
 
     private void Die()
     {
+        movementActive = false;
+        isPreJumping   = false;
         ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
 
+    // --- Movimiento ---
+
+    void SelectDirection()
+    {
+        Physics.SyncTransforms();
+        int floorMask = LayerMask.GetMask("Floor");
+
+        bool chasing = player != null &&
+                       Vector3.Distance(transform.position, player.position) <= detectionRange;
+
+        Vector3 chosenDir = chasing
+            ? BestDirToward(player.position, floorMask)
+            : RandomFreeDir(floorMask);
+
+        if (chosenDir == Vector3.zero) return;
+
+        Vector3 candidate = transform.position + chosenDir * tamañoCasilla;
+        Vector3 snapped   = LevelManager.Instance != null
+            ? LevelManager.Instance.SnapToGrid(candidate)
+            : candidate;
+        if (LevelManager.Instance != null && !LevelManager.Instance.IsInBounds(snapped))
+            return;
+
+        float groundY = LevelManager.Instance != null
+            ? LevelManager.Instance.enemySpawnHeight
+            : transform.position.y;
+        groundPosition = new Vector3(snapped.x, groundY, snapped.z);
+
+        transform.rotation = Quaternion.LookRotation(chosenDir);
+        isLanding     = false;
+        isPreJumping  = true;
+        targetScale   = new Vector3(normalScale.x * 1.2f, normalScale.y * 0.7f, normalScale.z * 1.2f);
+        StartCoroutine(JumpSequence());
+    }
+
+    Vector3 BestDirToward(Vector3 target, int floorMask)
+    {
+        Vector3 best     = Vector3.zero;
+        float   bestDist = float.MaxValue;
+        foreach (Vector3 dir in directions)
+        {
+            Vector3 candidate = transform.position + dir * tamañoCasilla;
+            if (!IsPassable(candidate, floorMask)) continue;
+            float dist = Vector3.Distance(candidate, target);
+            if (dist < bestDist) { bestDist = dist; best = dir; }
+        }
+        return best;
+    }
+
+    Vector3 RandomFreeDir(int floorMask)
+    {
+        for (int i = directions.Length - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (directions[i], directions[j]) = (directions[j], directions[i]);
+        }
+        foreach (Vector3 dir in directions)
+        {
+            Vector3 candidate = transform.position + dir * tamañoCasilla;
+            if (IsPassable(candidate, floorMask)) return dir;
+        }
+        return Vector3.zero;
+    }
+
+    bool IsPassable(Vector3 candidate, int floorMask)
+    {
+        Collider[] hits = Physics.OverlapSphere(candidate, 0.4f, obstacleLayerMask);
+        foreach (Collider c in hits)
+            if (c.gameObject != gameObject) return false;
+
+        Collider[] floorHits = Physics.OverlapSphere(
+            new Vector3(candidate.x, 0f, candidate.z), 0.4f, obstacleLayerMask);
+        foreach (Collider c in floorHits)
+            if (c.gameObject != gameObject) return false;
+
+        return Physics.OverlapSphere(
+            new Vector3(candidate.x, 0f, candidate.z), 0.3f, floorMask).Length > 0;
+    }
+
+    IEnumerator JumpSequence()
+    {
+        yield return new WaitForSeconds(0.1f);
+        targetScale    = new Vector3(normalScale.x * 0.8f, normalScale.y * 1.2f, normalScale.z * 0.8f);
+        targetPosition = groundPosition + Vector3.up;
+        isPreJumping   = false;
+        movementActive = true;
+        ani.SetBool("movementActive", true);
+    }
+
+    void MoveWizard()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
+        {
+            transform.position = targetPosition;
+            if (!isLanding)
+            {
+                isLanding      = true;
+                targetPosition = groundPosition;
+            }
+            else
+            {
+                targetScale = new Vector3(normalScale.x * 1.2f, normalScale.y * 0.8f, normalScale.z * 1.2f);
+                StartCoroutine(ReturnToNormal());
+                lastPosition   = groundPosition;
+                isLanding      = false;
+                movementActive = false;
+                timer          = 0f;
+                ani.SetBool("movementActive", false);
+            }
+        }
+    }
+
+    IEnumerator ReturnToNormal()
+    {
+        yield return new WaitForSeconds(0.1f);
+        targetScale = normalScale;
+    }
+
     void Update()
     {
-        MoveWizard();
+        transform.localScale = Vector3.Lerp(transform.localScale, targetScale, scaleSpeed * Time.deltaTime);
+
+        if (movementActive)
+            MoveWizard();
+        else if (!isPreJumping)
+        {
+            timer += Time.deltaTime;
+            if (timer >= timeWaitMove)
+            {
+                timer = 0f;
+                SelectDirection();
+            }
+        }
     }
 }
