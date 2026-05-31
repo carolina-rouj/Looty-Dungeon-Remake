@@ -15,6 +15,7 @@
         "BBBBB"
     ],
     "enemies": [
+        { "type": "Wizard", "col": 3, "row": 6 },
         { "type": "Wizard", "col": 3, "row": 3 }
     ],
     "traps": [],
