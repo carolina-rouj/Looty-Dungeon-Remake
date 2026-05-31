@@ -72,7 +72,6 @@ public class PlayerCombat : MonoBehaviour
         while (current != null)
         {
             if (current.GetComponent<Slime>() != null ||
-                current.GetComponent<Bat>() != null ||
                 current.GetComponent<Wizard>() != null ||
                 current.GetComponent<Gnome>() != null ||
                 current.GetComponent<Boss>() != null)

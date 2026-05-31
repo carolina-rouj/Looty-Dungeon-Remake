@@ -17,7 +17,7 @@ public class LevelData
 [Serializable]
 public class EnemySpawn
 {
-    public string type;   // "Slime", "Bat", "Wizard", "Gnome", "Boss"
+    public string type;   // "Slime", "Wizard", "Gnome", "Boss"
     public int col;       // columna
     public int row;       // fila
 }

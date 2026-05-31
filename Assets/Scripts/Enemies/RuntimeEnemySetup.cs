@@ -1,13 +1,13 @@
 using UnityEngine;
 
-// Va en los prefabs minimos de enemigos (Bat/Wizard/Gnome/Boss). En Awake monta el
+// Va en los prefabs minimos de enemigos (Slime/Wizard/Gnome/Boss). En Awake monta el
 // enemigo completo: collider, Animator (sin controller, evita NRE en los scripts de
 // Carolina que hacen GetComponent<Animator>()), el script de IA de Carolina y el visual
 // procedural. Asi el prefab en disco es trivial y el "look" se genera en runtime, igual
 // que el del jugador.
 public class RuntimeEnemySetup : MonoBehaviour
 {
-    public string enemyType = "Bat"; // "Bat", "Wizard", "Gnome", "Boss", "Slime"
+    public string enemyType = "Slime"; // "Slime", "Wizard", "Gnome", "Boss"
 
     private void Awake()
     {
@@ -25,10 +25,9 @@ public class RuntimeEnemySetup : MonoBehaviour
 
         switch (enemyType)
         {
-            case "Bat":    gameObject.AddComponent<Bat>();    break;
             case "Wizard": gameObject.AddComponent<Wizard>(); break;
             case "Gnome":  gameObject.AddComponent<Gnome>();  break;
-            case "Boss":   gameObject.AddComponent<Boss>(); gameObject.AddComponent<BossController>(); break;
+            case "Boss":   gameObject.AddComponent<Boss>(); break;
             case "Slime":  gameObject.AddComponent<Slime>();  break;
             default:       gameObject.AddComponent<Gnome>();  break;
         }

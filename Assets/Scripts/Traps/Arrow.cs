@@ -6,6 +6,7 @@ public class Arrow : MonoBehaviour
     public int damage = 1;
 
     private Rigidbody rb;
+    private Transform player;
 
     void Awake()
     {
@@ -25,6 +26,8 @@ public class Arrow : MonoBehaviour
 
     void Start()
     {
+        var pm = FindObjectOfType<PlayerMovement>();
+        if (pm != null) player = pm.transform;
         Destroy(gameObject, 5f);
     }
 
@@ -34,17 +37,20 @@ public class Arrow : MonoBehaviour
     {
         rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
 
-        // OnTriggerEnter no detecta CharacterController cuando el trigger se mueve hacia él.
-        // OverlapSphere sí lo encuentra directamente.
-        int count = Physics.OverlapSphereNonAlloc(rb.position, 0.25f, hitBuffer);
-        for (int i = 0; i < count; i++)
+        // CharacterController no aparece en OverlapSphere ni genera OnTriggerEnter con un
+        // Rigidbody cinemático en Unity 6. Usamos comprobación de distancia pura (mismo
+        // patrón que EnemyTouchDamage).
+        if (player != null)
         {
-            if (!hitBuffer[i].CompareTag("Player")) continue;
-            PlayerHealth ph = hitBuffer[i].GetComponent<PlayerHealth>();
-            if (ph == null) continue;
-            ph.TakeDamage(damage, transform.position);
-            Destroy(gameObject);
-            return;
+            Vector3 delta = rb.position - player.position;
+            delta.y = 0f;
+            if (delta.sqrMagnitude < 0.5f * 0.5f)
+            {
+                PlayerHealth ph = player.GetComponent<PlayerHealth>();
+                if (ph != null) ph.TakeDamage(damage, transform.position);
+                Destroy(gameObject);
+                return;
+            }
         }
     }
 
