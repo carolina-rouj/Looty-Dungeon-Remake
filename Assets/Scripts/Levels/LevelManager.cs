@@ -337,8 +337,6 @@ public class LevelManager : MonoBehaviour
             trap.diana = diana.transform;
             trap.arrowPrefab = arrowProjectilePrefab;
         }
-        if (dianaComp != null)
-            dianaComp.arrowTrap = trap;
 
         spawnedObjects.Add(shooter);
         spawnedObjects.Add(diana);
@@ -373,8 +371,8 @@ public class LevelManager : MonoBehaviour
 
         BoxCollider col = root.AddComponent<BoxCollider>();
         col.isTrigger = true;
-        col.size   = new Vector3(0.8f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
-        col.center = new Vector3(0.4f, 0f, 0f);      // delante del contenedor
+        col.size   = new Vector3(1.1f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
+        col.center = new Vector3(0.55f, 0f, 0f);     // delante del contenedor
 
         spawnedObjects.Add(root);
     }

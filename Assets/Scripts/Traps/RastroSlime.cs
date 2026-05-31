@@ -1,9 +1,9 @@
+using System.Collections;
 using UnityEngine;
 
 public class RastroSlime : MonoBehaviour
 {
-    public float slowDuration = 2f;   // segundos que ralentiza al player (y luego desaparece)
-    public float slowFactor   = 0.5f; // multiplicador de velocidad del player
+    public float lifetime = 8f;
 
     private bool activated = false;
     private bool falling = false;
@@ -12,34 +12,78 @@ public class RastroSlime : MonoBehaviour
 
     void Start()
     {
-        // El slime instancia el rastro a una Y fija (1) que flota; lo apoyamos en la
-        // superficie real del suelo.
-        int floorMask = LayerMask.GetMask("Floor");
-        if (Physics.Raycast(transform.position + Vector3.up * 4f, Vector3.down, out RaycastHit hit, 10f, floorMask))
-        {
-            Vector3 p = transform.position;
-            p.y = hit.point.y + 0.02f;
-            transform.position = p;
-        }
+        Destroy(gameObject, lifetime);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (!activated && other.CompareTag("Player"))
+        if (activated || !other.CompareTag("Player")) return;
+        activated = true;
+        PlayerMovement pm = other.GetComponent<PlayerMovement>();
+        if (pm != null) StartCoroutine(TrapSequence(pm));
+    }
+
+    IEnumerator TrapSequence(PlayerMovement pm)
+    {
+        Vector3 center = LevelManager.Instance != null
+            ? LevelManager.Instance.SnapToGrid(transform.position)
+            : transform.position;
+        center.y = pm.transform.position.y;
+
+        CharacterController cc = pm.GetComponent<CharacterController>();
+        cc.enabled = false;
+        pm.transform.position = center;
+        cc.enabled = true;
+
+        pm.ApplyJelly(1.5f);
+
+        RuntimeVfx.Burst(center + Vector3.up * 0.3f, new Color(0.2f, 0.85f, 0.2f, 0.7f), 22, 0.55f);
+        DungeonGameRuntime.Instance?.PlayTrapActivated(transform.position, "Slime");
+
+        StartCoroutine(BounceScale(transform,    new Vector3(1.35f, 0.5f,  1.35f)));
+        StartCoroutine(BounceScale(pm.transform, new Vector3(1.2f,  0.65f, 1.2f)));
+
+        yield return new WaitForSeconds(1.5f);
+
+        RuntimeVfx.Burst(transform.position + Vector3.up * 0.2f, new Color(0.2f, 0.85f, 0.2f, 0.7f), 14, 0.4f);
+        DungeonGameRuntime.Instance?.PlayTrapActivated(transform.position, "Slime");
+        yield return StartCoroutine(ShrinkOut(0.18f));
+        Destroy(gameObject);
+    }
+
+    IEnumerator ShrinkOut(float duration)
+    {
+        Vector3 orig = transform.localScale;
+        for (float e = 0f; e < duration; e += Time.deltaTime)
         {
-            activated = true;
-            PlayerMovement pm = other.GetComponent<PlayerMovement>();
-            if (pm != null) pm.ApplySlow(slowFactor, slowDuration);
-            Destroy(gameObject, slowDuration);
+            transform.localScale = Vector3.Lerp(orig, Vector3.zero, e / duration);
+            yield return null;
         }
+    }
+
+    IEnumerator BounceScale(Transform t, Vector3 squashedScale)
+    {
+        Vector3 orig = t.localScale;
+        const float squashTime = 0.12f;
+        const float returnTime = 0.22f;
+
+        for (float e = 0f; e < squashTime; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.Lerp(orig, squashedScale, e / squashTime);
+            yield return null;
+        }
+        for (float e = 0f; e < returnTime; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.Lerp(squashedScale, orig, e / returnTime);
+            yield return null;
+        }
+        t.localScale = orig;
     }
 
     void Update()
     {
         if (falling) return;
 
-        // Si el bloque de suelo bajo el rastro se ha caido (suelo que cae), la marca verde
-        // cae con el en vez de quedar suspendida en el aire.
         Vector3 footXZ = new Vector3(transform.position.x, 0f, transform.position.z);
         int floorMask = LayerMask.GetMask("Floor");
         bool hasFloor = Physics.OverlapSphereNonAlloc(footXZ, 0.3f, probe, floorMask) > 0;
@@ -57,9 +101,8 @@ public class RastroSlime : MonoBehaviour
     {
         falling = true;
         foreach (Collider c in GetComponentsInChildren<Collider>())
-        {
             c.enabled = false;
-        }
+
         if (GetComponent<Rigidbody>() == null)
         {
             Rigidbody rb = gameObject.AddComponent<Rigidbody>();

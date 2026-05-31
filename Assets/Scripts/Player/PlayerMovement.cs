@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     public Vector3 Facing { get; private set; } = Vector3.forward;
     public bool IsSlowed => Time.time <= slowUntil;
+    public bool IsJelled => Time.time <= jellyUntil;
     public float CurrentSpeedMultiplier => IsSlowed ? slowFactor : 1f;
     public bool IsDashing => Time.time <= dashUntil;
     public float DashCooldownRemaining => Mathf.Max(0f, nextDashTime - Time.time);
@@ -14,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     private float speed = 4.4f;
     private float slowUntil;
     private float slowFactor = 1f;
+    private float jellyUntil;
     private float fallGraceUntil;
     private Vector3 dashDirection;
     private float dashUntil;
@@ -32,6 +34,7 @@ public class PlayerMovement : MonoBehaviour
         Facing = Vector3.forward;
         slowUntil = 0f;
         slowFactor = 1f;
+        jellyUntil = 0f;
         dashUntil = 0f;
         nextDashTime = 0f;
         dashDirection = Vector3.zero;
@@ -43,6 +46,13 @@ public class PlayerMovement : MonoBehaviour
     {
         slowFactor = Mathf.Min(slowFactor, factor);
         slowUntil = Mathf.Max(slowUntil, Time.time + duration);
+    }
+
+    public void ApplyJelly(float duration)
+    {
+        slowFactor = 0f;
+        slowUntil = Mathf.Max(slowUntil, Time.time + duration);
+        jellyUntil = Mathf.Max(jellyUntil, Time.time + duration);
     }
 
     private void Update()
@@ -85,6 +95,16 @@ public class PlayerMovement : MonoBehaviour
         }
         controller.Move(Vector3.down * 3f * Time.deltaTime);
 
+        if (IsJelled)
+        {
+            Vector3 wobble = new Vector3(
+                Mathf.Sin(Time.time * 7f),
+                0f,
+                Mathf.Cos(Time.time * 5f)
+            ) * 0.28f;
+            controller.Move(wobble * Time.deltaTime);
+        }
+
         if (LevelManager.Instance != null && Time.time > fallGraceUntil && !HasFloorBelow())
         {
             fallGraceUntil = Time.time + 0.7f;
@@ -105,7 +125,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool TryDash(Vector3 direction)
     {
-        if (DungeonGameRuntime.Instance == null || !DungeonGameRuntime.Instance.IsPlaying || Time.time < nextDashTime)
+        if (DungeonGameRuntime.Instance == null || !DungeonGameRuntime.Instance.IsPlaying || Time.time < nextDashTime || IsJelled)
         {
             return false;
         }
