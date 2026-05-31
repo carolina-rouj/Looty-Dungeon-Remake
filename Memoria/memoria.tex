@@ -172,8 +172,8 @@ El control imita el del \textit{Looty Dungeon} original: el jugador es mou
     \item \textbf{Espai} o \textbf{clic esquerre}: atacar en la direcció encarada.
     \item \textbf{P} o \textbf{Esc}: pausar; des de la pausa, \textbf{Enter}/\textbf{P}
     reprenen i \textbf{M} torna al menú principal.
-    \item \textbf{0}--\textbf{9}: saltar directament a la sala corresponent
-    (reinicia la sala amb els enemics i l'objectiu).
+    \item \textbf{1}--\textbf{9}: saltar directament a la sala corresponent; la
+    tecla \textbf{0} salta a la sala final del boss.
     \item A les pantalles de \textbf{victòria} i \textbf{derrota}, \textbf{R} o
     \textbf{Enter} reinicien la partida des de la sala 1 i \textbf{M} torna al menú.
 \end{itemize}
@@ -181,7 +181,9 @@ El control imita el del \textit{Looty Dungeon} original: el jugador es mou
 A cada sala, l'objectiu actiu es mostra a la part superior del HUD. La porta
 s'obre quan s'han eliminat tots els enemics de la sala. A més, algunes sales (la
 3, la 6 i la 9) tenen un objectiu addicional de recollir un nombre de monedes
-que, en complir-se, atorga monedes extra com a bonificació.
+que, en complir-se, atorga monedes extra com a bonificació. En el flux normal de
+joc la vida es manté en passar de sala; en canvi, saltar de sala amb les tecles
+numèriques (una drecera de depuració) reinicia la vida a tres cors.
 
 \subsection{Diagrama de finestres i flow chart}
 
@@ -379,8 +381,7 @@ té resposta visual i sonora:
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\linewidth]{captures/lvl09.png}
-\caption{Sala avançada de la masmorra amb diverses trampes. La barra de progrés
-del HUD (a la part superior) indica les sales superades.}
+\caption{Sala avançada de la masmorra amb diverses trampes i decoracions.}
 \label{fig:falling}
 \end{figure}
 
