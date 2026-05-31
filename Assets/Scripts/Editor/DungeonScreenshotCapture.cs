@@ -4,9 +4,6 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// Captura de pantallas en batchmode: abre LevelScene, entra en Play, recorre las 10 salas
-// y guarda un PNG de cada una en Memoria/captures/. Uso:
-//   Unity -batchmode -projectPath . -executeMethod DungeonScreenshotCapture.Run -logFile -
 public static class DungeonScreenshotCapture
 {
     private const int Width = 1600;

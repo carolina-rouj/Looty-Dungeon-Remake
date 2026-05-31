@@ -6,9 +6,6 @@ public class CameraFollowDungeon : MonoBehaviour
     private Vector3 staticFocus;
     private bool useStaticFocus;
 
-    // Seguimiento "leve": el foco se mezcla entre el centro de la sala y el player, y se
-    // limita a los bordes de la sala para no enseñar el vacio de fuera. Da el efecto del
-    // Looty Dungeon oficial (la camara sigue al heroe pero sin perder de vista la sala).
     private bool softFollow;
     private Vector3 roomCenter;
     private float followWeight = 0.55f;
@@ -36,7 +33,6 @@ public class CameraFollowDungeon : MonoBehaviour
         Snap();
     }
 
-    // center = centro de la sala; min/max = limites del suelo (para acotar el desplazamiento).
     public void SetSoftFollow(Transform followTarget, Vector3 center, Vector3 min, Vector3 max, float weight = 0.55f)
     {
         target = followTarget;
@@ -89,9 +85,6 @@ public class CameraFollowDungeon : MonoBehaviour
     {
         if (softFollow && target != null)
         {
-            // La camara se mueve SOLO en el eje del nivel (Z): sigue el avance del jugador
-            // por la sala (que crece en una sola direccion) pero la X queda fija al centro,
-            // asi no se va a izquierda/derecha. Es "seguir el nivel", no al jugador.
             float marginZ = (boundsMax.z - boundsMin.z) * 0.5f;
             focus.x = roomCenter.x;
             focus.z = Mathf.Clamp(target.position.z, roomCenter.z - marginZ, roomCenter.z + marginZ);

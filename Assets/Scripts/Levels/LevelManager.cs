@@ -11,13 +11,11 @@ public class LevelManager : MonoBehaviour
     public GameObject floorCarpetEnd; // c
     public GameObject floorCarpetContinue; // C
 
-    // Enemigos del nivel
     public GameObject slimePrefab;
     public GameObject wizardPrefab;
     public GameObject gnomePrefab;
     public GameObject bossPrefab;
 
-    // trampas del nivel
     public GameObject rastroSlimePrefab;
     public GameObject spiderWebsPrefab;
     public GameObject forkContainerPrefab;
@@ -26,13 +24,11 @@ public class LevelManager : MonoBehaviour
     public GameObject dianaPrefab;
     public GameObject arrowProjectilePrefab;
 
-    // paredes del nivel
     public GameObject wallPlainPrefab;
     public GameObject wallDoorPrefab;
     public GameObject doorPrefab;
     public Vector3 wallScale = Vector3.one;
 
-    // decoraciones del nivel
     public GameObject thronePrefab;
     public GameObject floorTorchPrefab;
     public GameObject floorTorchFirePrefab;
@@ -43,12 +39,9 @@ public class LevelManager : MonoBehaviour
     public GameObject carpetPrefab;
     public GameObject tapestryPrefab;
 
-    // altura Y de spawn para que los enemigos no traspasen el suelo
     public float enemySpawnHeight = 1f;
-    // altura Y de spawn para que las decoraciones queden encima del cubo del suelo
     public float decorationSpawnHeight = 1.0f;
 
-    // Singleton
     public static LevelManager Instance { get; private set; }
 
 
@@ -104,7 +97,6 @@ public class LevelManager : MonoBehaviour
         LoadAndBuild();
     }
 
-    // Borra el nivel actual antes de cargar otro
     void ClearLevel()
     {
         StopAllCoroutines();
@@ -132,7 +124,6 @@ public class LevelManager : MonoBehaviour
         gridCols = 0;
     }
 
-    // Cambio de nivel
     public void LoadLevel(string fileName)
     {
         ClearLevel();
@@ -170,7 +161,6 @@ public class LevelManager : MonoBehaviour
         Debug.Log($"[LevelManager] Nivel '{levelData.name}' cargado.");
     }
 
-    // funcion para montar el suelo del nivel segun el json
     void BuildFloor()
     {
         if (levelData.grid == null || levelData.grid.Length == 0) return;
@@ -272,11 +262,6 @@ public class LevelManager : MonoBehaviour
             Vector3 pos = GridToWorld(spawn.col, spawn.row);
             pos.y = enemySpawnHeight;
             spawnedObjects.Add(Instantiate(prefab, pos, Quaternion.identity));
-            // Mateus: los enemigos NO se registran en objectsByRow. Si se desplomaban con su
-            // fila de spawn, se les añadía un Rigidbody pero su IA seguía fijándoles la Y cada
-            // frame y quedaban FLOTANDO en el vacío. La caída de enemigos la gestiona
-            // EnemyFloorFall según su posición REAL (cuando no hay suelo bajo ellos, para su
-            // IA y los deja caer), que es lo correcto aunque se hayan movido de casilla.
         }
     }
 
@@ -334,8 +319,6 @@ public class LevelManager : MonoBehaviour
         GameObject shooter = Instantiate(arrowShootPrefab, shooterPos, rot);
         GameObject diana = Instantiate(dianaPrefab, dianaPos, Quaternion.identity);
 
-        // Mateus: cuerpo SÓLIDO del lanzador para que el jugador NO pueda meterse dentro.
-        // (La flecha tiene collider trigger, así que esto no bloquea su propio disparo.)
         BoxCollider shooterBody = shooter.AddComponent<BoxCollider>();
         shooterBody.isTrigger = false;
         shooterBody.center = new Vector3(0f, -0.5f, 0f);
@@ -352,7 +335,6 @@ public class LevelManager : MonoBehaviour
                 dianaComp.arrowTrap = trap;
         }
 
-        // Diana es su propio tile de suelo; registrarla en tilesByRow para fallingFloor
         if (!tilesByRow.ContainsKey(spawn.dianaRow))
             tilesByRow[spawn.dianaRow] = new List<GameObject>();
         tilesByRow[spawn.dianaRow].Add(diana);
@@ -364,8 +346,6 @@ public class LevelManager : MonoBehaviour
 
         spawnedObjects.Add(shooter);
         spawnedObjects.Add(diana);
-        // (shooter ya está en objectsByRow y diana en tilesByRow más arriba; no duplicar
-        //  el registro de caída o se les añadiría el Rigidbody dos veces.)
     }
 
     void SpawnRetractileFork(TrapSpawn spawn)
@@ -400,8 +380,6 @@ public class LevelManager : MonoBehaviour
         col.size   = new Vector3(1.1f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
         col.center = new Vector3(0.55f, 0f, 0f);     // delante del contenedor
 
-        // Mateus: cuerpo SÓLIDO del fork para que el jugador no pueda meterse dentro
-        // (el trigger de arriba sigue haciendo daño; este solo bloquea el paso).
         BoxCollider body = root.AddComponent<BoxCollider>();
         body.isTrigger = false;
         body.center = new Vector3(0f, -0.5f, 0f);
@@ -430,8 +408,6 @@ public class LevelManager : MonoBehaviour
         SpiderWebs script = root.AddComponent<SpiderWebs>();
         script.tela1Prefab = spiderWebsPrefab;
 
-        // Colisionador de suelo invisible (sin mesh) en capa "Floor" para HasFloorAt.
-        // BuildFloor salta esta casilla, así que lo creamos aquí manualmente.
         GameObject floorDetector = new GameObject("FloorDetector");
         floorDetector.transform.SetParent(root.transform, false);
         floorDetector.layer = LayerMask.NameToLayer("Floor");
@@ -464,9 +440,6 @@ public class LevelManager : MonoBehaviour
                 decoration.transform.localScale *= spawn.scale;
             spawnedObjects.Add(decoration);
 
-            // Dar colisión a las decoraciones que no traen collider del prefab.
-            // El box se ancla en world Y=0 (suelo) hasta Y=1.2, independientemente de
-            // la altura de spawn, para que el slime pueda detectarlo en ambas alturas.
             if (spawn.type != "Carpet" && decoration.GetComponent<Collider>() == null)
             {
                 BoxCollider box = decoration.AddComponent<BoxCollider>();
@@ -477,8 +450,6 @@ public class LevelManager : MonoBehaviour
             if (spawn.type == "FloorTorch" && floorTorchFirePrefab != null)
             {
                 GameObject fire = Instantiate(floorTorchFirePrefab, decoration.transform);
-                // El prefab tiene escala (0.4,0.4,0.4). localPosition.y=0.9 coloca el fuego
-                // en la punta del modelo (0.9*0.4 = 0.36u en espacio mundo)
                 fire.transform.localPosition = new Vector3(0f, 0.9f, 0f);
                 fire.transform.localRotation = Quaternion.identity;
             }
@@ -515,7 +486,6 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // Convierte coordenadas de casilla (col, row) a posición en el mundo
     public Vector3 GridToWorld(int col, int row)
     {
         float halfW = gridCols * tamañoCasilla / 2f - tamañoCasilla / 2f;
@@ -527,7 +497,6 @@ public class LevelManager : MonoBehaviour
         );
     }
 
-    // Redondea una posición del mundo al centro de casilla más cercano
     public Vector3 SnapToGrid(Vector3 worldPos)
     {
         if (gridCols == 0 || gridRows == 0) return worldPos;
@@ -548,7 +517,6 @@ public class LevelManager : MonoBehaviour
         );
     }
 
-    // Comprueba si una posición está dentro del área del nivel
     public bool IsInBounds(Vector3 p)
     {
         return p.x >= -MaxBoundX - tamañoCasilla * 0.5f &&
@@ -557,9 +525,6 @@ public class LevelManager : MonoBehaviour
                p.z <=  MaxBoundZ + tamañoCasilla * 0.5f;
     }
 
-    // Mateus: ¿hay una decoracion, trampa o pared en esta casilla? Sirve para no soltar
-    // monedas encima de un caliz / barril / trampa, etc. (que quedaban montados unos sobre
-    // otros). No cuenta enemigos porque se mueven y dejan la casilla libre.
     public bool IsCellOccupied(int col, int row)
     {
         if (levelData == null) return false;
@@ -578,24 +543,17 @@ public class LevelManager : MonoBehaviour
         return false;
     }
 
-    // Mateus: registra un objeto para que CAIGA junto con su fila cuando el suelo se
-    // desploma (mismo mecanismo que enemigos/decoraciones). Asi trampas y obstaculos no
-    // quedan flotando en el vacio: todo tiene "gravedad" cuando se cae el suelo.
     void RegisterRowObject(GameObject go, int row)
     {
         if (go == null) return;
         if (!objectsByRow.ContainsKey(row))
             objectsByRow[row] = new List<GameObject>();
-        if (!objectsByRow[row].Contains(go))   // evita registrar dos veces -> Rigidbody doble
+        if (!objectsByRow[row].Contains(go))   
             objectsByRow[row].Add(go);
     }
 
-    // Mateus: gracia inicial antes de que el suelo EMPIECE a caer. Antes la primera fila
-    // (donde aparece el jugador) se desplomaba a los ~2s de entrar, y se perdia una vida
-    // nada mas empezar el nivel. Con esto el jugador tiene tiempo de orientarse y arrancar.
     private const float StartFallGrace = 3f;
 
-    // codigo para que el suelo caiga por filas
     IEnumerator FallingFloors()
     {
         yield return new WaitForSeconds(StartFallGrace);
@@ -631,7 +589,6 @@ public class LevelManager : MonoBehaviour
 
     IEnumerator ShakeAndFallRow(List<GameObject> tiles)
     {
-        // temblor (1s)
         float elapsed = 0f;
         float shakeDuration = 1f;
         float shakeMag = 0.07f;
@@ -656,7 +613,6 @@ public class LevelManager : MonoBehaviour
             yield return null;
         }
 
-        // caída física descoordinada: cada bloque cae con retardo aleatorio
         for (int i = 0; i < tiles.Count; i++)
         {
             if (tiles[i] == null) continue;
@@ -711,8 +667,4 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    // NOTA: el salto de nivel con teclas 0-9 lo gestiona DungeonGameRuntime (que ademas
-    // actualiza el estado del juego, el HUD y reposiciona al player). Antes habia aqui un
-    // OnGUI que cargaba niveles directamente y puenteaba al runtime: eso desincronizaba la
-    // barra de progreso del HUD y provocaba dobles cargas. Se elimino a proposito.
 }

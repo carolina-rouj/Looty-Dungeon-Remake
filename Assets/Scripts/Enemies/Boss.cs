@@ -47,8 +47,6 @@ public class Boss : MonoBehaviour
         }
     }
 
-    // --- Daño y muerte ---
-
     public void Hurt()
     {
         --lives;
@@ -62,8 +60,6 @@ public class Boss : MonoBehaviour
         ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
-
-    // --- Movimiento ---
 
     void SelectDirection()
     {

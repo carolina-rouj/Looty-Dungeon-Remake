@@ -43,8 +43,6 @@ public class WizardOrb : MonoBehaviour
     {
         rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
 
-        // CharacterController no genera OnTriggerEnter con Rigidbody cinematico en Unity 6.
-        // Mismo patron de comprobacion por distancia que Arrow.cs.
         if (player != null)
         {
             Vector3 delta = rb.position - player.position;

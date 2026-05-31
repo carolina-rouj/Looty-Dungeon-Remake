@@ -3,17 +3,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-// Lectura de teclado/raton a prueba del backend de input.
-//
-// Problema que resuelve: tras el merge, "Active Input Handling" del proyecto puede quedar
-// en modos donde la clase legacy UnityEngine.Input NO entrega eventos en runtime. Por eso
-// solo respondian las teclas 0-9 (que Carolina lee con Event.current en OnGUI, que SI
-// funciona en cualquier backend) y el player no se movia / no atacaba / no pausaba.
-//
-// Solucion: leer SIEMPRE por el Input System nuevo (Keyboard.current / Mouse.current) y,
-// ademas, por la clase legacy como respaldo. Con "Both" ambos disparan el mismo frame, asi
-// que el OR no produce doble activacion. Asi el control funciona pase lo que pase con la
-// config de input.
 public static class DungeonInput
 {
 #if ENABLE_INPUT_SYSTEM
@@ -21,7 +10,6 @@ public static class DungeonInput
     private static Mouse Ms => Mouse.current;
 #endif
 
-    // --- Ejes de movimiento (WASD + flechas) ---
     public static float Horizontal()
     {
         float x = 0f;
@@ -68,7 +56,6 @@ public static class DungeonInput
         return pressed || LegacyKeyDown(KeyCode.Space) || LegacyMouseDown(0);
     }
 
-    // --- Teclas sueltas (menus, pausa, etc.) ---
     public static bool Pause()   => KeyDown(KeyCode.P);
     public static bool Escape()  => KeyDown(KeyCode.Escape);
     public static bool Submit()  => KeyDown(KeyCode.Return) || KeyDown(KeyCode.KeypadEnter);
@@ -77,7 +64,6 @@ public static class DungeonInput
     public static bool Credits() => KeyDown(KeyCode.C);
     public static bool Restart() => KeyDown(KeyCode.R);
 
-    // Devuelve el indice de nivel 0..9 si se pulso esa tecla numerica este frame, o -1.
     public static int LevelKeyPressed()
     {
         for (int i = 0; i < 10; i++)
@@ -155,8 +141,6 @@ public static class DungeonInput
     }
 #endif
 
-    // --- Respaldo legacy (protegido por try para que nunca tire una excepcion que
-    //     congele el Update si el backend legacy esta deshabilitado) ---
     private static bool LegacyKey(KeyCode code)
     {
         try { return Input.GetKey(code); } catch { return false; }

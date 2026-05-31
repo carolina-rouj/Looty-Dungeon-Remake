@@ -1,15 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Reproduce sonidos de las trampas de Carolina (flecha al dispararse, pinchos al subir)
-// OBSERVANDO su estado, sin modificar sus scripts (ArrowTrap/RetractileFork/Arrow): asi no
-// chocamos con su trabajo en curso sobre las trampas. Vive en el GameObject del runtime.
 public class RuntimeTrapAudio : MonoBehaviour
 {
     private readonly HashSet<int> knownArrows = new HashSet<int>();
     private readonly Dictionary<int, bool> forkExtended = new Dictionary<int, bool>();
-
-    // El fork parte retraido (forkMesh.localPosition.x ~= 0.3) y se extiende hasta ~1.1.
     private const float ForkExtendThreshold = 0.7f;
 
     private void Update()
@@ -20,7 +15,6 @@ public class RuntimeTrapAudio : MonoBehaviour
             return;
         }
 
-        // --- Flechas: suena cuando aparece una flecha nueva ---
         Arrow[] arrows = FindObjectsByType<Arrow>(FindObjectsSortMode.None);
         if (arrows.Length == 0)
         {
@@ -37,7 +31,6 @@ public class RuntimeTrapAudio : MonoBehaviour
             }
         }
 
-        // --- Pinchos: suena en el flanco retraido -> extendido ---
         foreach (RetractileFork fork in FindObjectsByType<RetractileFork>(FindObjectsSortMode.None))
         {
             if (fork == null || fork.forkMesh == null) continue;

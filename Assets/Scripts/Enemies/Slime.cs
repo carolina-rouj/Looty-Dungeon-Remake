@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Slime : MonoBehaviour
@@ -44,8 +43,6 @@ public class Slime : MonoBehaviour
         }
     }
 
-    // --- Daño y muerte ---
-
     public void Hurt()
     {
         --lives;
@@ -58,8 +55,6 @@ public class Slime : MonoBehaviour
         isPreJumping = false;
         Destroy(gameObject, 0.5f);
     }
-
-    // --- Movimiento ---
 
     void SelectDirection()
     {
@@ -92,7 +87,6 @@ public class Slime : MonoBehaviour
             Vector3 floorCheck = new Vector3(candidate.x, 0f, candidate.z);
             if (Physics.OverlapSphere(floorCheck, 0.3f, floorMask).Length == 0) continue;
 
-            // Snap al centro exacto de la casilla destino
             Vector3 snapped = LevelManager.Instance != null
                 ? LevelManager.Instance.SnapToGrid(candidate)
                 : candidate;

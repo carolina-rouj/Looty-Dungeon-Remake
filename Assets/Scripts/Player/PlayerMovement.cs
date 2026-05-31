@@ -1,13 +1,5 @@
 using UnityEngine;
 
-// Movimiento al estilo Looty Dungeon: el jugador NO se mueve libremente, sino CASILLA A
-// CASILLA sobre la cuadricula del nivel, "dando saltitos". Cada pulsacion (o tecla
-// mantenida) avanza una casilla en una de las 4 direcciones; el desplazamiento se hace a
-// traves del CharacterController para que paredes/puerta sigan bloqueando, y al aterrizar
-// se reajusta al centro de casilla mas cercano para no perder el alineamiento. El "salto"
-// visual lo hace el hijo RuntimePlayerVisual (no pelea con la gravedad).
-//
-// (El antiguo dash y toda su logica se han eliminado a proposito para parecerse al original.)
 public class PlayerMovement : MonoBehaviour
 {
     public Vector3 Facing { get; private set; } = Vector3.forward;
@@ -23,14 +15,13 @@ public class PlayerMovement : MonoBehaviour
     private float jellyUntil;
     private float fallGraceUntil;
 
-    // --- Estado del salto entre casillas ---
     private bool hopping;
     private Vector3 hopFromXZ;
     private Vector3 hopToXZ;
     private float hopElapsed;
     private float hopDuration;
 
-    private const float BaseHopDuration = 0.15f;  // segundos por casilla (sensacion agil)
+    private const float BaseHopDuration = 0.15f;  // segundos por casilla
     private const float HopHeight       = 0.22f;  // altura del saltito visual
     private const float Gravity         = 3f;
 
@@ -42,7 +33,6 @@ public class PlayerMovement : MonoBehaviour
     public void ResetAt(Vector3 position)
     {
         controller.enabled = false;
-        // Alineamos el spawn al centro de casilla para arrancar cuadriculado.
         Vector3 snapped = SnapXZ(position);
         transform.position = new Vector3(snapped.x, position.y + 0.05f, snapped.z);
         transform.rotation = Quaternion.LookRotation(Vector3.forward);
@@ -99,7 +89,7 @@ public class PlayerMovement : MonoBehaviour
                 Facing = dir;
                 transform.rotation = Quaternion.LookRotation(dir);
 
-                // Paralizado (telarana, factor ~0) o engominado (rastro de slime): no avanza.
+                // Paralizado o engominado (rastro de slime): no avanza
                 bool paralysed = IsJelled || CurrentSpeedMultiplier <= 0.1f;
                 if (!paralysed)
                 {
@@ -108,7 +98,7 @@ public class PlayerMovement : MonoBehaviour
             }
             else if (IsJelled && visual != null)
             {
-                // Pequeno temblor mientras esta atrapado, sin desplazarse.
+                // temblor mientras esta atrapado, sin desplazarse
                 visual.localPosition = new Vector3(Mathf.Sin(Time.time * 30f) * 0.03f, 0f, 0f);
             }
         }
@@ -116,7 +106,6 @@ public class PlayerMovement : MonoBehaviour
         // Gravedad: mantiene al jugador pegado al suelo (y lo deja caer en el vacio).
         controller.Move(Vector3.down * Gravity * Time.deltaTime);
 
-        // Caida al vacio: si no hay suelo bajo los pies, se respawnea (mecanica de Carolina).
         if (LevelManager.Instance != null && Time.time > fallGraceUntil && !HasFloorBelow())
         {
             fallGraceUntil = Time.time + 0.7f;
@@ -124,8 +113,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // Lee WASD/flechas como un PASO discreto en 4 direcciones (sin diagonales). Con la tecla
-    // mantenida, al acabar un salto se encadena el siguiente => recorrido casilla a casilla.
     private static Vector3 ReadStepDirection()
     {
         float h = DungeonInput.Horizontal();
@@ -170,7 +157,6 @@ public class PlayerMovement : MonoBehaviour
         Vector3 cur = transform.position;
         controller.Move(new Vector3(desired.x - cur.x, 0f, desired.z - cur.z));
 
-        // Arco del saltito (solo visual).
         if (visual != null)
         {
             visual.localPosition = new Vector3(0f, Mathf.Sin(Mathf.PI * t) * HopHeight, 0f);
@@ -180,8 +166,6 @@ public class PlayerMovement : MonoBehaviour
         {
             hopping = false;
             if (visual != null) visual.localPosition = Vector3.zero;
-            // Reajuste a la casilla mas cercana: si una pared corto el avance, cae en la de
-            // origen; si no, en la de destino. Asi siempre queda cuadriculado.
             Vector3 snapped = SnapXZ(transform.position);
             transform.position = new Vector3(snapped.x, transform.position.y, snapped.z);
         }
@@ -204,8 +188,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // El LevelManager de Carolina coloca los tiles del suelo en la capa "Floor" (en y=0).
-    // Detectamos si el jugador sigue sobre suelo sondeando esa capa bajo sus pies.
     private static readonly Collider[] floorProbe = new Collider[4];
 
     private bool HasFloorBelow()

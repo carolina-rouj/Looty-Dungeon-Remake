@@ -1,10 +1,6 @@
 using System.Collections;
 using UnityEngine;
 
-// Da vida al boss (el Boss.cs de Carolina tiene la IA comentada con // TODO player). De
-// forma aditiva: persigue al jugador, lo encara, y cada cierto tiempo hace una embestida
-// con telegrafia (se agacha/crece antes de lanzarse). El daño lo aplica el glue de
-// contacto (EnemyTouchDamage). No toca el Boss.cs ni su contador de vidas (Hurt/Die).
 public class BossController : MonoBehaviour
 {
     public float moveSpeed = 1.9f;
@@ -77,7 +73,6 @@ public class BossController : MonoBehaviour
         float dist = to.magnitude;
         Vector3 dir = dist > 0.01f ? to / dist : transform.forward;
 
-        // Encara al jugador.
         if (to.sqrMagnitude > 0.01f)
         {
             Quaternion look = Quaternion.LookRotation(dir);
@@ -90,7 +85,6 @@ public class BossController : MonoBehaviour
             transform.position += dir * moveSpeed * Time.deltaTime;
         }
 
-        // Embestida periodica si el jugador esta cerca.
         if (!lunging && dist < detectRange && Time.time >= nextLunge)
         {
             nextLunge = Time.time + lungeInterval;
@@ -104,7 +98,6 @@ public class BossController : MonoBehaviour
     {
         lunging = true;
 
-        // Telegrafia: se agacha y crece un instante (aviso de ataque).
         if (DungeonGameRuntime.Instance != null)
         {
             DungeonGameRuntime.Instance.PlayEnemyCast(transform.position, new Color(1f, 0.4f, 0.12f));
@@ -122,7 +115,6 @@ public class BossController : MonoBehaviour
         }
         if (visual != null) visual.localScale = visualBaseScale;
 
-        // Embestida rapida hacia el jugador (acotada a la sala en cada paso).
         t = 0f;
         while (t < 0.28f)
         {

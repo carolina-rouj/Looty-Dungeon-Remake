@@ -1,9 +1,5 @@
 using UnityEngine;
 
-// Glue de Mateus: el runtime lo engancha a cada enemigo de Carolina al descubrirlo.
-// Cuando el enemigo se autodestruye tras morir (su Die() llama a Destroy), avisa al
-// runtime para contabilizar la baja, abrir la puerta al limpiar la sala y soltar
-// recompensas. No requiere modificar los scripts de enemigo de Carolina.
 public class EnemyDeathWatcher : MonoBehaviour
 {
     private DungeonGameRuntime runtime;

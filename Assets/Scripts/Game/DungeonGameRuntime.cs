@@ -53,10 +53,6 @@ public class DungeonGameRuntime : MonoBehaviour
         "final_level"
     };
 
-    // --- Objetivos por sala ---------------------------------------------------------
-    // Cada sala tiene un OBJETIVO que hay que cumplir para que se abra la puerta (regla a
-    // explorar + objetivo a conseguir, como exige el enunciado), mas un RETO de tiempo
-    // opcional que da monedas extra. La puerta solo abre cuando el objetivo esta cumplido.
     private enum ObjectiveType { KillAll, CollectCoins }
 
     private struct LevelGoal
@@ -67,7 +63,6 @@ public class DungeonGameRuntime : MonoBehaviour
         public LevelGoal(ObjectiveType t, int a, float s) { type = t; amount = a; targetSeconds = s; }
     }
 
-    // Indexado por sala (0..9). Mezcla de "mata a todos" y "recoge X monedas".
     private readonly LevelGoal[] levelGoals =
     {
         new LevelGoal(ObjectiveType.KillAll,      0, 25f), // 1
@@ -102,7 +97,6 @@ public class DungeonGameRuntime : MonoBehaviour
     private GUIStyle panelStyle;
     private float guiScale = -1f;
 
-    // --- Tema visual del HUD / pantallas (estilo mazmorra Looty) ---
     private static readonly Color UiText   = new Color(0.97f, 0.94f, 0.87f);
     private static readonly Color UiSub    = new Color(0.80f, 0.74f, 0.64f);
     private static readonly Color UiAccent = new Color(1f, 0.82f, 0.30f);   // dorado
@@ -369,8 +363,6 @@ public class DungeonGameRuntime : MonoBehaviour
             EnemyTouchDamage.Ensure(enemy);
             EnemyHitFeedback.Ensure(enemy);
             EnemyDeathWatcher.Ensure(enemy, this);
-            // El boss NO debe caerse por el suelo (en su sala el suelo cae): lo mantiene
-            // firme su BossController. Al resto si les ponemos la caida con el suelo.
             if (enemy.GetComponent<Boss>() == null)
             {
                 EnemyFloorFall.Ensure(enemy);
@@ -400,8 +392,6 @@ public class DungeonGameRuntime : MonoBehaviour
         Vector3 roomMax = new Vector3(manager.MaxBoundX, 0f, manager.MaxBoundZ);
         cameraFollow.SetSoftFollow(player.transform, ComputeCameraFocus(manager), roomMin, roomMax, 0.55f);
         CreateDoor(ComputeExitPosition(manager));
-        // El suelo que cae lo gestiona el LevelManager de Carolina segun el flag
-        // 'fallingFloor' de cada JSON, asi que aqui ya no lo disparamos.
         DiscoverEnemies();
         levelEnemyTotal = aliveEnemies.Count;
         ScatterCoins(manager);
@@ -416,28 +406,13 @@ public class DungeonGameRuntime : MonoBehaviour
         transitionFinishedAt = Time.time;
     }
 
-    // --- Integracion con el LevelManager de Carolina ---
-    // Su LevelManager centra la cuadricula alrededor de su propio transform y
-    // expone los limites del nivel (MinBoundZ/MaxBoundZ/MaxBoundX), pero no marca
-    // puntos de spawn/salida. Los derivamos de esos limites.
-
-    // OJO: el GridToWorld de Carolina centra el nivel en el ORIGEN DEL MUNDO e ignora
-    // la posicion del GameObject LevelManager, asi que estos puntos se calculan en
-    // coordenadas de mundo (no relativas al transform del LevelManager).
     private Vector3 ComputePlayerSpawn(LevelManager manager)
     {
-        // Aparecemos en el tile de suelo REAL mas CENTRADO y mas hacia el FRENTE del nivel.
-        // Antes cogiamos el mas cercano al frente-centro, pero en niveles cuya primera fila
-        // tiene un hueco en el centro (p.ej. el 8, fila ".B...") eso dejaba al jugador en un
-        // tile suelto del borde, fácil de caerse al vacio. Priorizando |x| (columna central)
-        // y luego la cercania al frente, aparece siempre en una casilla central y solida.
         Transform best = FindSpawnFloorTile(manager);
         if (best != null) return best.position + Vector3.up * 0.9f;
         return new Vector3(0f, 0.9f, manager.MinBoundZ);
     }
 
-    // Tile de suelo para el spawn: el de columna mas central (|x| minimo) y, a igualdad,
-    // el mas adelantado (z mas cerca del frente MinBoundZ). Ignora tiles que ya caen.
     private static Transform FindSpawnFloorTile(LevelManager manager)
     {
         int floorLayer = LayerMask.NameToLayer("Floor");
@@ -468,8 +443,6 @@ public class DungeonGameRuntime : MonoBehaviour
         return new Vector3(0f, 0f, (manager.MinBoundZ + manager.MaxBoundZ) * 0.5f);
     }
 
-    // Coloca monedas sobre tiles de suelo aleatorios (de forma aditiva, sin tocar el JSON
-    // de Carolina). El jugador las recoge y suben el contador del HUD.
     private void ScatterCoins(LevelManager manager)
     {
         int floorLayer = LayerMask.NameToLayer("Floor");
@@ -481,22 +454,18 @@ public class DungeonGameRuntime : MonoBehaviour
         if (floors.Count == 0) return;
 
         int count = Mathf.Clamp(floors.Count / 5, 3, 9);
-        // Si el objetivo de la sala es recoger monedas, garantiza que haya suficientes
-        // (con margen) para poder cumplirlo.
         LevelGoal goal = CurrentGoal();
         if (goal.type == ObjectiveType.CollectCoins)
         {
             count = Mathf.Min(floors.Count, Mathf.Max(count, goal.amount + 2));
         }
-        // Reparte sin repetir tile, asi no se apilan dos monedas en la misma casilla.
+
         HashSet<Transform> used = new HashSet<Transform>();
         int safety = 0;
         while (used.Count < count && safety++ < count * 12)
         {
             Transform tile = floors[Random.Range(0, floors.Count)];
             if (!used.Add(tile)) continue;
-            // No soltar la moneda encima de una decoracion/trampa/pared (el tile se llama
-            // "Tile_c_r"): asi no aparecen monedas montadas sobre el caliz, barriles, etc.
             string[] parts = tile.name.Split('_');
             if (parts.Length == 3 && int.TryParse(parts[1], out int tcol) && int.TryParse(parts[2], out int trow)
                 && manager.IsCellOccupied(tcol, trow))
@@ -504,14 +473,10 @@ public class DungeonGameRuntime : MonoBehaviour
                 used.Remove(tile);
                 continue;
             }
-            // La moneda se cuelga del tile: cuando el tile se cae (suelo que cae de
-            // Carolina), la moneda cae con el; cuando el tile se destruye, la moneda tambien.
             CoinPickup.Create(tile);
         }
     }
 
-    // Los tiles de suelo son hijos del LevelManager y estan en la capa "Floor"; devolvemos
-    // el mas cercano a una posicion de referencia (frente del nivel = spawn, fondo = salida).
     private static Transform FindFloorTileNear(LevelManager manager, Vector3 reference)
     {
         int floorLayer = LayerMask.NameToLayer("Floor");
@@ -520,8 +485,6 @@ public class DungeonGameRuntime : MonoBehaviour
         foreach (Transform child in manager.transform)
         {
             if (child.gameObject.layer != floorLayer) continue;
-            // No reaparecer sobre un tile que YA se esta cayendo (tiene Rigidbody) o cuyo
-            // collider ya se desactivo: nos llevaria a caer otra vez y perder otra vida.
             if (child.GetComponent<Rigidbody>() != null) continue;
             Collider c = child.GetComponent<Collider>();
             if (c != null && !c.enabled) continue;
@@ -531,9 +494,6 @@ public class DungeonGameRuntime : MonoBehaviour
         return best;
     }
 
-    // El LevelManager de Carolina instancia sus propios prefabs de enemigos pero no
-    // avisa al runtime; aqui los recogemos y les enganchamos el glue de gameplay
-    // (dano por contacto, flash al golpear, deteccion de muerte) sin tocar sus scripts.
     private void DiscoverEnemies()
     {
         aliveEnemies.Clear();
@@ -547,10 +507,6 @@ public class DungeonGameRuntime : MonoBehaviour
         }
     }
 
-    // Apoya al enemigo sobre la superficie real del suelo. El LevelManager los spawnea a
-    // una altura fija (enemySpawnHeight = 1) que queda por encima del suelo y los hacia
-    // flotar; con un raycast a la capa "Floor" los bajamos a ras de suelo. Se hace antes de
-    // que corra el Start del enemigo (que fija su Y de referencia), por lo que persiste.
     private static void GroundToFloor(GameObject enemy)
     {
         int floorMask = LayerMask.GetMask("Floor");
@@ -573,8 +529,6 @@ public class DungeonGameRuntime : MonoBehaviour
         return result;
     }
 
-    // Lo llama EnemyDeathWatcher.OnDestroy. Ignora las destrucciones provocadas por
-    // el cambio de nivel para no contarlas como bajas.
     public void HandleEnemyDestroyed(GameObject enemy)
     {
         if (clearingLevel || State != DungeonState.Playing)
@@ -732,7 +686,6 @@ public class DungeonGameRuntime : MonoBehaviour
         OpenDoorIfObjectiveMet();
     }
 
-    // --- Objetivos -----------------------------------------------------------------
     private LevelGoal CurrentGoal()
     {
         return levelGoals[Mathf.Clamp(CurrentLevelIndex, 0, levelGoals.Length - 1)];
@@ -759,8 +712,6 @@ public class DungeonGameRuntime : MonoBehaviour
         return (boss ? "Derrota al boss " : "Derrota a los enemigos ") + killed + "/" + total;
     }
 
-    // Abre la puerta SOLO cuando el objetivo de la sala se cumple. Se llama al matar un
-    // enemigo y al recoger una moneda.
     private void OpenDoorIfObjectiveMet()
     {
         if (State != DungeonState.Playing || door == null || door.IsOpen || !IsObjectiveComplete())
@@ -920,8 +871,6 @@ public class DungeonGameRuntime : MonoBehaviour
         RuntimeVfx.FloatingText(position + Vector3.up * 1.5f, "KO", new Color(1f, 0.38f, 0.16f));
     }
 
-    // Sonidos de trampa (los dispara RuntimeTrapAudio observando las trampas de Carolina,
-    // sin tocar sus scripts).
     public void PlayTrapArrow(Vector3 position)
     {
         runtimeAudio.PlaySfx(RuntimeSfx.ArrowShoot);
@@ -980,10 +929,6 @@ public class DungeonGameRuntime : MonoBehaviour
         Time.timeScale = 1f;
         runTimerActive = true;
         aliveEnemies.Clear();
-        // Desactiva YA los enemigos del nivel anterior. El Destroy de ClearLevel es diferido
-        // a fin de frame, así que si no, DiscoverEnemies (que corre este mismo frame) los
-        // contaría junto a los nuevos y el objetivo saldría mal (p.ej. "0/2" con 1 enemigo).
-        // FindObjectsByType ignora los inactivos, así que desactivarlos basta.
         foreach (MonoBehaviour stale in FindEnemyBehaviours())
         {
             if (stale != null) stale.gameObject.SetActive(false);
@@ -1005,12 +950,6 @@ public class DungeonGameRuntime : MonoBehaviour
             return;
         }
 
-        // El LevelManager de Carolina construye el nivel de forma sincrona dentro de
-        // LoadLevel y no hace callback, asi que disparamos nosotros el wiring posterior.
-        // La guarda 'clearingLevel' evita que las destrucciones de enemigos del nivel
-        // anterior (al limpiar) se cuenten como bajas.
-        // try/finally para que el wiring posterior SIEMPRE se ejecute: si LoadLevel
-        // fallara, sin esto el fade de transicion se quedaria en negro para siempre.
         try
         {
             clearingLevel = true;
@@ -1109,11 +1048,6 @@ public class DungeonGameRuntime : MonoBehaviour
             Destroy(door.gameObject);
         }
 
-        // Compuerta FUNCIONAL (invisible): bloquea hasta cumplir el objetivo y luego se
-        // vuelve trigger para pasar de sala. El VISUAL de la puerta lo pone el JSON de cada
-        // nivel (pared "type": "Door"): tanto en los de Carolina como en los mios, que ahora
-        // usan su mismo esquema (puerta en col2, fila N-2, con suelo detras). Asi no hay
-        // vacio ante la puerta ni se pierde vida al cruzar.
         GameObject doorObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         doorObject.name = "Exit Door";
         doorObject.transform.position = position + Vector3.up * 0.75f;
@@ -1295,9 +1229,6 @@ public class DungeonGameRuntime : MonoBehaviour
                 alignment = TextAnchor.MiddleCenter
             };
         }
-        // El color del glifo lo da style.normal.textColor (no GUI.color): en un GUIStyle
-        // vacio el textColor no es blanco, por eso los corazones salian negros. Lleno =
-        // rojo, perdido = negro. Empiezan los 3 rojos y se ennegrecen al perder vida.
         Color full = new Color(0.95f, 0.19f, 0.22f);
         Color empty = new Color(0.18f, 0.06f, 0.07f);
         float spacing = 32f * scale;
@@ -1812,10 +1743,6 @@ public class DungeonGameRuntime : MonoBehaviour
     {
         if (uiFontTried) return;
         uiFontTried = true;
-        // Fuente INCLUIDA en el proyecto (Assets/Resources/Fonts/UiFont.ttf, Open Sans): se
-        // empaqueta con el juego, asi que SIEMPRE carga (no depende de fuentes del SO, que
-        // fallaban con "Unable to load font face" dejando el texto invisible). Si por lo que
-        // fuera no cargara, caemos a la fuente por defecto de Unity, que siempre renderiza.
         uiFont = Resources.Load<Font>("Fonts/UiFont");
         if (uiFont == null)
         {

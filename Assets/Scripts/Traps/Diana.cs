@@ -9,7 +9,6 @@ public class Diana : MonoBehaviour
         foreach (Collider c in GetComponentsInChildren<Collider>(true))
             c.enabled = false;
 
-        // Diana actúa como tile de suelo: layer "Floor" para que HasFloorAt lo detecte
         gameObject.layer = LayerMask.NameToLayer("Floor");
 
         BoxCollider floor = gameObject.AddComponent<BoxCollider>();

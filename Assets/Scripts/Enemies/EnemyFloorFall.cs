@@ -1,9 +1,5 @@
 using UnityEngine;
 
-// Glue de Mateus: hace que un enemigo se caiga cuando el suelo bajo el (capa "Floor")
-// desaparece, p.ej. en los niveles donde el suelo cae por filas. Desactiva la IA del
-// enemigo para que no pelee con la fisica, le anade un Rigidbody y lo destruye. Es
-// aditivo: no toca los scripts de enemigo de Carolina.
 public class EnemyFloorFall : MonoBehaviour
 {
     private static readonly Collider[] probe = new Collider[4];

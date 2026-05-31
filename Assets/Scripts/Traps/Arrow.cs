@@ -37,9 +37,6 @@ public class Arrow : MonoBehaviour
     {
         rb.MovePosition(rb.position + transform.forward * speed * Time.fixedDeltaTime);
 
-        // CharacterController no aparece en OverlapSphere ni genera OnTriggerEnter con un
-        // Rigidbody cinemático en Unity 6. Usamos comprobación de distancia pura (mismo
-        // patrón que EnemyTouchDamage).
         if (player != null)
         {
             Vector3 delta = rb.position - player.position;
