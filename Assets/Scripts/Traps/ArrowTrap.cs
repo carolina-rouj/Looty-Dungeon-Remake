@@ -17,7 +17,7 @@ public class ArrowTrap : MonoBehaviour
     {
         if (diana != null) distanceToDiana = (int)Vector3.Distance(transform.position, diana.position);
         shootInterval = Mathf.Max(0.5f, distanceToDiana * 0.5f);
-        shooting = true;
+        shooting = false;
     }
 
     void Update()
