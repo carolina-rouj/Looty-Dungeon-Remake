@@ -33,15 +33,10 @@ public class PlayerMovement : MonoBehaviour
     private const float BaseHopDuration = 0.15f;  // segundos por casilla (sensacion agil)
     private const float HopHeight       = 0.22f;  // altura del saltito visual
     private const float Gravity         = 3f;
-    private Vector3 dashDirection;
-    private float dashUntil;
-    private float nextDashTime;
-    private int floorMask;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
-        floorMask = LayerMask.GetMask("Floor");
     }
 
     public void ResetAt(Vector3 position)
@@ -115,25 +110,6 @@ public class PlayerMovement : MonoBehaviour
             {
                 // Pequeno temblor mientras esta atrapado, sin desplazarse.
                 visual.localPosition = new Vector3(Mathf.Sin(Time.time * 30f) * 0.03f, 0f, 0f);
-            Vector3 dashMove = dashDirection * (11.5f * Time.deltaTime);
-            if (HasFloorAt(transform.position + dashMove))
-                controller.Move(dashMove);
-            else
-                dashUntil = 0f;
-        }
-        else
-        {
-            Vector3 move = input * (speed * multiplier * Time.deltaTime);
-            if (HasFloorAt(transform.position + move))
-            {
-                controller.Move(move);
-            }
-            else
-            {
-                Vector3 moveX = new Vector3(move.x, 0f, 0f);
-                Vector3 moveZ = new Vector3(0f, 0f, move.z);
-                if (move.x != 0f && HasFloorAt(transform.position + moveX)) controller.Move(moveX);
-                if (move.z != 0f && HasFloorAt(transform.position + moveZ)) controller.Move(moveZ);
             }
         }
 
@@ -163,37 +139,6 @@ public class PlayerMovement : MonoBehaviour
             return new Vector3(0f, 0f, Mathf.Sign(v));
         }
         return new Vector3(Mathf.Sign(h), 0f, 0f);
-    private static readonly Collider[] floorProbe = new Collider[4];
-
-    // Comprobación predictiva: calcula la casilla destino sin clamp. Si está fuera
-    // del grid o no tiene tile de suelo, devuelve false — bloqueo justo en el límite.
-    private bool HasFloorAt(Vector3 worldPos)
-    {
-        LevelManager lm = LevelManager.Instance;
-        if (lm == null) return true;
-
-        float size  = lm.tamañoCasilla;
-        float halfW = lm.MaxBoundX;
-        float halfH = lm.MaxBoundZ;
-
-        int col = Mathf.RoundToInt((worldPos.x + halfW) / size);
-        int row = Mathf.RoundToInt((worldPos.z + halfH) / size);
-
-        int gridCols = Mathf.RoundToInt(2f * halfW / size) + 1;
-        int gridRows = Mathf.RoundToInt(2f * halfH / size) + 1;
-
-        if (col < 0 || col >= gridCols || row < 0 || row >= gridRows) return false;
-
-        float cx = col * size - halfW;
-        float cz = row * size - halfH;
-        return Physics.OverlapSphereNonAlloc(new Vector3(cx, 0f, cz), 0.1f, floorProbe, floorMask) > 0;
-    }
-
-    // Red de seguridad para caídas: radio más generoso para no fallar en los bordes.
-    private bool HasFloorBelow()
-    {
-        Vector3 footXZ = new Vector3(transform.position.x, 0f, transform.position.z);
-        return Physics.OverlapSphereNonAlloc(footXZ, 0.35f, floorProbe, floorMask) > 0;
     }
 
     private void TryStartHop(Vector3 dir, float tile)
