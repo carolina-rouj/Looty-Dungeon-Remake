@@ -1,0 +1,38 @@
+{
+    "name": "Nivel 2",
+    "tamañoCasilla": 1.0,
+    "grid": [
+      "..#..",
+      "#####",
+      "#####",
+      "###..",
+      "#####",
+      "#####",
+      "###..",
+      "#####",
+      "#####",
+      "###..",
+      "#####",
+      "#####",
+      "#####"
+    ],
+    "enemies": [
+      { "type": "Slime", "col": 3, "row": 3 },
+      { "type": "Gnome", "col": 2, "row": 4 }
+    ],
+    "traps": [],
+    "walls": [
+        { "col": 1, "row":  3, "rotation": 90, "type": "Plain" },
+        { "col": 1, "row":  6, "rotation": 90, "type": "Plain" },
+        { "col": 1, "row":  9, "rotation": 90, "type": "Plain" },
+        { "col": 1, "row":  12, "rotation": 90, "type": "Plain" },
+        { "col": 2, "row": 11, "rotation": 270, "width": 1.4, "type": "Door" }
+    ],
+    "decorations": [
+        { "type": "Barrel",     "col": 4, "row": 2, "rotation": 0,   "yOffset": 0 },
+        { "type": "Barrel",     "col": 3, "row": 1, "rotation": 0,   "yOffset": 0 },
+        { "type": "Caliz",      "col": 2, "row": 5, "rotation": 0,   "yOffset": 0 },
+        { "type": "Barrel",     "col": 1, "row": 7, "rotation": 0,   "yOffset": 0 },
+        { "type": "Barrel",     "col": 0, "row": 8, "rotation": 0,   "yOffset": 0 }
+    ]
+}
