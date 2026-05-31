@@ -47,24 +47,87 @@ public static class EnemyVisualBuilder
         CreatePart(visual, PrimitiveType.Sphere, "Bat Eye R", new Vector3(0.11f, 0.72f, 0.27f), Vector3.one * 0.09f, new Color(1f, 0.18f, 0.08f));
     }
 
+    // Mago = tunica acampanada, barba blanca, sombrero puntiagudo con estrella y baston con
+    // orbe brillante. Alto e imponente para contrastar con el gnomo pequeno. Mira hacia +Z.
     private static void BuildWizard(Transform root)
     {
-        Transform visual = CreateVisualRoot(root, 0.05f, 3.5f);
-        CreatePart(visual, PrimitiveType.Capsule, "Wizard Robe", new Vector3(0f, 0.72f, 0f), new Vector3(0.62f, 0.82f, 0.62f), new Color(0.38f, 0.12f, 0.72f));
-        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Brim", new Vector3(0f, 1.24f, 0f), new Vector3(0.62f, 0.08f, 0.62f), new Color(0.13f, 0.07f, 0.22f));
-        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Hat", new Vector3(0f, 1.48f, 0f), new Vector3(0.28f, 0.36f, 0.28f), new Color(0.22f, 0.08f, 0.42f));
-        CreatePart(visual, PrimitiveType.Cube, "Wizard Staff", new Vector3(0.42f, 0.72f, 0.08f), new Vector3(0.07f, 0.95f, 0.07f), new Color(0.48f, 0.24f, 0.08f));
-        CreatePart(visual, PrimitiveType.Sphere, "Wizard Orb", new Vector3(0.42f, 1.26f, 0.08f), Vector3.one * 0.18f, new Color(0.28f, 0.88f, 1f));
+        Transform visual = CreateVisualRoot(root, 0.05f, 3.2f);
+
+        Color robe = new Color(0.30f, 0.12f, 0.62f);   // morado profundo
+        Color hat  = new Color(0.17f, 0.06f, 0.40f);
+        Color skin = new Color(0.93f, 0.74f, 0.60f);
+        Color beard = new Color(0.92f, 0.92f, 0.95f);
+        Color gold = new Color(0.97f, 0.78f, 0.18f);
+        Color wood = new Color(0.45f, 0.28f, 0.12f);
+        Color orb  = new Color(0.32f, 0.90f, 1f);
+        Color pupil = new Color(0.10f, 0.10f, 0.12f);
+
+        // Tunica acampanada (falda ancha + torso) y cinturon dorado
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Robe Skirt", new Vector3(0f, 0.34f, 0f), new Vector3(0.80f, 0.36f, 0.80f), robe);
+        CreatePart(visual, PrimitiveType.Capsule,  "Wizard Robe Body",  new Vector3(0f, 0.86f, 0f), new Vector3(0.54f, 0.50f, 0.54f), robe);
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Belt",       new Vector3(0f, 0.66f, 0f), new Vector3(0.58f, 0.07f, 0.58f), gold);
+
+        // Cabeza, nariz, ojos y barba
+        CreatePart(visual, PrimitiveType.Sphere,  "Wizard Head",  new Vector3(0f, 1.28f, 0f),    Vector3.one * 0.34f, skin);
+        CreatePart(visual, PrimitiveType.Sphere,  "Wizard Nose",  new Vector3(0f, 1.26f, 0.18f), Vector3.one * 0.10f, skin);
+        CreatePart(visual, PrimitiveType.Sphere,  "Wizard Eye L", new Vector3(-0.11f, 1.33f, 0.27f), Vector3.one * 0.05f, pupil);
+        CreatePart(visual, PrimitiveType.Sphere,  "Wizard Eye R", new Vector3( 0.11f, 1.33f, 0.27f), Vector3.one * 0.05f, pupil);
+        CreatePart(visual, PrimitiveType.Capsule, "Wizard Beard", new Vector3(0f, 1.06f, 0.12f), new Vector3(0.30f, 0.36f, 0.24f), beard);
+
+        // Sombrero puntiagudo (ala + cono escalonado + estrella)
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Hat Brim", new Vector3(0f, 1.46f, 0f), new Vector3(0.62f, 0.05f, 0.62f), hat);
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Hat 1",    new Vector3(0f, 1.60f, 0f), new Vector3(0.38f, 0.16f, 0.38f), hat);
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Hat 2",    new Vector3(0f, 1.82f, 0f), new Vector3(0.24f, 0.18f, 0.24f), hat);
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Hat Tip",  new Vector3(0f, 2.00f, 0f), new Vector3(0.09f, 0.14f, 0.09f), hat);
+        CreatePart(visual, PrimitiveType.Cube,     "Wizard Hat Star", new Vector3(0f, 1.66f, 0.34f), new Vector3(0.12f, 0.12f, 0.04f), gold);
+
+        // Baston con orbe brillante (mano derecha)
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Staff",     new Vector3(0.50f, 0.92f, 0.16f), new Vector3(0.07f, 0.78f, 0.07f), wood);
+        CreatePart(visual, PrimitiveType.Cylinder, "Wizard Orb Mount", new Vector3(0.50f, 1.60f, 0.16f), new Vector3(0.14f, 0.08f, 0.14f), gold);
+        CreatePart(visual, PrimitiveType.Sphere,   "Wizard Orb",       new Vector3(0.50f, 1.74f, 0.16f), Vector3.one * 0.22f, orb);
     }
 
+    // Gnomo = criatura pequena y rechoncha (BASTANTE mas baja que el jugador: el jugador
+    // mide ~1.45 y el gnomo apenas llega a ~1.0 con el gorro, con un cuerpo diminuto).
+    // Gorro rojo puntiagudo, gran barba blanca, nariz bulbosa y un pico de minero. Mira +Z.
     private static void BuildGnome(Transform root)
     {
-        Transform visual = CreateVisualRoot(root, 0.04f, 4.2f);
-        CreatePart(visual, PrimitiveType.Capsule, "Gnome Body", new Vector3(0f, 0.58f, 0f), new Vector3(0.55f, 0.58f, 0.55f), new Color(0.82f, 0.28f, 0.12f));
-        CreatePart(visual, PrimitiveType.Sphere, "Gnome Nose", new Vector3(0f, 0.72f, 0.32f), Vector3.one * 0.14f, new Color(0.95f, 0.58f, 0.4f));
-        CreatePart(visual, PrimitiveType.Cylinder, "Gnome Hat", new Vector3(0f, 1.02f, 0f), new Vector3(0.28f, 0.38f, 0.28f), new Color(0.05f, 0.34f, 0.2f));
-        CreatePart(visual, PrimitiveType.Cube, "Gnome Axe", new Vector3(-0.42f, 0.62f, 0.08f), new Vector3(0.08f, 0.72f, 0.08f), new Color(0.5f, 0.27f, 0.1f));
-        CreatePart(visual, PrimitiveType.Cube, "Gnome Axe Head", new Vector3(-0.42f, 0.98f, 0.08f), new Vector3(0.34f, 0.16f, 0.08f), new Color(0.82f, 0.78f, 0.68f));
+        Transform visual = CreateVisualRoot(root, 0.05f, 5f);
+
+        Color tunic   = new Color(0.20f, 0.42f, 0.78f);   // tunica azul
+        Color tunicDk = new Color(0.13f, 0.30f, 0.58f);
+        Color hat     = new Color(0.85f, 0.16f, 0.12f);   // gorro rojo
+        Color hatDk   = new Color(0.66f, 0.10f, 0.08f);
+        Color skin    = new Color(0.96f, 0.76f, 0.62f);
+        Color nose    = new Color(0.97f, 0.66f, 0.52f);
+        Color beard   = new Color(0.95f, 0.95f, 0.97f);
+        Color boot    = new Color(0.34f, 0.20f, 0.10f);
+        Color wood    = new Color(0.45f, 0.28f, 0.12f);
+        Color metal   = new Color(0.78f, 0.80f, 0.86f);
+        Color pupil   = new Color(0.10f, 0.10f, 0.12f);
+
+        // Botas y cuerpo rechoncho
+        CreatePart(visual, PrimitiveType.Cube,     "Gnome Boot L", new Vector3(-0.12f, 0.07f, 0.04f), new Vector3(0.16f, 0.14f, 0.22f), boot);
+        CreatePart(visual, PrimitiveType.Cube,     "Gnome Boot R", new Vector3( 0.12f, 0.07f, 0.04f), new Vector3(0.16f, 0.14f, 0.22f), boot);
+        CreatePart(visual, PrimitiveType.Capsule,  "Gnome Body",   new Vector3(0f, 0.30f, 0f), new Vector3(0.42f, 0.26f, 0.42f), tunic);
+        CreatePart(visual, PrimitiveType.Cylinder, "Gnome Belt",   new Vector3(0f, 0.26f, 0f), new Vector3(0.40f, 0.05f, 0.40f), tunicDk);
+
+        // Cabeza, nariz bulbosa, ojos y gran barba blanca
+        CreatePart(visual, PrimitiveType.Sphere,  "Gnome Head",  new Vector3(0f, 0.52f, 0f),    Vector3.one * 0.26f, skin);
+        CreatePart(visual, PrimitiveType.Sphere,  "Gnome Nose",  new Vector3(0f, 0.50f, 0.15f), Vector3.one * 0.12f, nose);
+        CreatePart(visual, PrimitiveType.Sphere,  "Gnome Eye L", new Vector3(-0.08f, 0.56f, 0.20f), Vector3.one * 0.04f, pupil);
+        CreatePart(visual, PrimitiveType.Sphere,  "Gnome Eye R", new Vector3( 0.08f, 0.56f, 0.20f), Vector3.one * 0.04f, pupil);
+        CreatePart(visual, PrimitiveType.Capsule, "Gnome Beard", new Vector3(0f, 0.38f, 0.08f), new Vector3(0.26f, 0.22f, 0.18f), beard);
+
+        // Gorro rojo puntiagudo (cono escalonado que cae hacia atras)
+        CreatePart(visual, PrimitiveType.Cylinder, "Gnome Hat Base", new Vector3(0f, 0.66f, 0f),     new Vector3(0.32f, 0.06f, 0.32f), hat);
+        CreatePart(visual, PrimitiveType.Cylinder, "Gnome Hat 1",    new Vector3(0f, 0.74f, -0.02f), new Vector3(0.24f, 0.10f, 0.24f), hat);
+        CreatePart(visual, PrimitiveType.Cylinder, "Gnome Hat 2",    new Vector3(0f, 0.86f, -0.05f), new Vector3(0.15f, 0.10f, 0.15f), hat);
+        CreatePart(visual, PrimitiveType.Sphere,   "Gnome Hat Tip",  new Vector3(0f, 0.96f, -0.08f), Vector3.one * 0.07f, hatDk);
+
+        // Pico de minero (mano izquierda)
+        CreatePart(visual, PrimitiveType.Cube, "Gnome Pick Handle", new Vector3(-0.30f, 0.34f, 0.06f), new Vector3(0.05f, 0.42f, 0.05f), wood);
+        CreatePart(visual, PrimitiveType.Cube, "Gnome Pick Head",   new Vector3(-0.30f, 0.54f, 0.06f), new Vector3(0.26f, 0.07f, 0.06f), metal);
     }
 
     // Boss = esqueleto rey con corona, escudo y espada (estilo del jefe final del Looty
