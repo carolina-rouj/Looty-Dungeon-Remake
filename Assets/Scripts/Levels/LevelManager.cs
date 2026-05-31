@@ -336,7 +336,19 @@ public class LevelManager : MonoBehaviour
         {
             trap.diana = diana.transform;
             trap.arrowPrefab = arrowProjectilePrefab;
+            if (dianaComp != null)
+                dianaComp.arrowTrap = trap;
         }
+
+        // Diana es su propio tile de suelo; registrarla en tilesByRow para fallingFloor
+        if (!tilesByRow.ContainsKey(spawn.dianaRow))
+            tilesByRow[spawn.dianaRow] = new List<GameObject>();
+        tilesByRow[spawn.dianaRow].Add(diana);
+
+        // El shooter cae con su fila
+        if (!objectsByRow.ContainsKey(spawn.row))
+            objectsByRow[spawn.row] = new List<GameObject>();
+        objectsByRow[spawn.row].Add(shooter);
 
         spawnedObjects.Add(shooter);
         spawnedObjects.Add(diana);
@@ -374,6 +386,10 @@ public class LevelManager : MonoBehaviour
         col.size   = new Vector3(1.1f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
         col.center = new Vector3(0.55f, 0f, 0f);     // delante del contenedor
 
+        if (!objectsByRow.ContainsKey(spawn.row))
+            objectsByRow[spawn.row] = new List<GameObject>();
+        objectsByRow[spawn.row].Add(root);
+
         spawnedObjects.Add(root);
     }
 
@@ -392,6 +408,19 @@ public class LevelManager : MonoBehaviour
 
         SpiderWebs script = root.AddComponent<SpiderWebs>();
         script.tela1Prefab = spiderWebsPrefab;
+
+        // Colisionador de suelo invisible (sin mesh) en capa "Floor" para HasFloorAt.
+        // BuildFloor salta esta casilla, así que lo creamos aquí manualmente.
+        GameObject floorDetector = new GameObject("FloorDetector");
+        floorDetector.transform.SetParent(root.transform, false);
+        floorDetector.layer = LayerMask.NameToLayer("Floor");
+        BoxCollider floorCol = floorDetector.AddComponent<BoxCollider>();
+        floorCol.size   = new Vector3(1f, 1f, 1f);
+        floorCol.center = Vector3.zero;
+
+        if (!objectsByRow.ContainsKey(spawn.row))
+            objectsByRow[spawn.row] = new List<GameObject>();
+        objectsByRow[spawn.row].Add(root);
 
         spawnedObjects.Add(root);
     }

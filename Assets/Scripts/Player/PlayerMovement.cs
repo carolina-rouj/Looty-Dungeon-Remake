@@ -20,10 +20,12 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 dashDirection;
     private float dashUntil;
     private float nextDashTime;
+    private int floorMask;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        floorMask = LayerMask.GetMask("Floor");
     }
 
     public void ResetAt(Vector3 position)
@@ -87,11 +89,26 @@ public class PlayerMovement : MonoBehaviour
 
         if (IsDashing)
         {
-            controller.Move(dashDirection * (11.5f * Time.deltaTime));
+            Vector3 dashMove = dashDirection * (11.5f * Time.deltaTime);
+            if (HasFloorAt(transform.position + dashMove))
+                controller.Move(dashMove);
+            else
+                dashUntil = 0f;
         }
         else
         {
-            controller.Move(input * (speed * multiplier * Time.deltaTime));
+            Vector3 move = input * (speed * multiplier * Time.deltaTime);
+            if (HasFloorAt(transform.position + move))
+            {
+                controller.Move(move);
+            }
+            else
+            {
+                Vector3 moveX = new Vector3(move.x, 0f, 0f);
+                Vector3 moveZ = new Vector3(0f, 0f, move.z);
+                if (move.x != 0f && HasFloorAt(transform.position + moveX)) controller.Move(moveX);
+                if (move.z != 0f && HasFloorAt(transform.position + moveZ)) controller.Move(moveZ);
+            }
         }
         controller.Move(Vector3.down * 3f * Time.deltaTime);
 
@@ -112,14 +129,36 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // El LevelManager de Carolina coloca los tiles del suelo en la capa "Floor" (en y=0).
-    // Detectamos si el jugador sigue sobre suelo sondeando esa capa bajo sus pies.
     private static readonly Collider[] floorProbe = new Collider[4];
 
+    // Comprobación predictiva: calcula la casilla destino sin clamp. Si está fuera
+    // del grid o no tiene tile de suelo, devuelve false — bloqueo justo en el límite.
+    private bool HasFloorAt(Vector3 worldPos)
+    {
+        LevelManager lm = LevelManager.Instance;
+        if (lm == null) return true;
+
+        float size  = lm.tamañoCasilla;
+        float halfW = lm.MaxBoundX;
+        float halfH = lm.MaxBoundZ;
+
+        int col = Mathf.RoundToInt((worldPos.x + halfW) / size);
+        int row = Mathf.RoundToInt((worldPos.z + halfH) / size);
+
+        int gridCols = Mathf.RoundToInt(2f * halfW / size) + 1;
+        int gridRows = Mathf.RoundToInt(2f * halfH / size) + 1;
+
+        if (col < 0 || col >= gridCols || row < 0 || row >= gridRows) return false;
+
+        float cx = col * size - halfW;
+        float cz = row * size - halfH;
+        return Physics.OverlapSphereNonAlloc(new Vector3(cx, 0f, cz), 0.1f, floorProbe, floorMask) > 0;
+    }
+
+    // Red de seguridad para caídas: radio más generoso para no fallar en los bordes.
     private bool HasFloorBelow()
     {
         Vector3 footXZ = new Vector3(transform.position.x, 0f, transform.position.z);
-        int floorMask = LayerMask.GetMask("Floor");
         return Physics.OverlapSphereNonAlloc(footXZ, 0.35f, floorProbe, floorMask) > 0;
     }
 
