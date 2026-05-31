@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class RetractileFork : MonoBehaviour
 {
-    public enum ForkState { Idle, Extending, Retracting } // 3 estados del fork state
+    public enum ForkState { Idle, Extending, Retracting }
 
-    public float idleDuration = 1f; //intervalo en cada retraccion
-    public float extendDuration = 0.25f;  // tiempo en extenderse
-    public float retractDuration = 0.25f;  // tiempo en retraerse
-    public float extendDistance = 1f; //maxima distancia del tenedor retractil (1 casilla)
-    public float spinSpeed = 720f;  // efecto giratorio del tenedor
+    public Transform forkMesh;
+    public float idleDuration = 1f;
+    public float extendDuration = 0.25f;
+    public float retractDuration = 0.25f;
+    public float extendDistance = 0.8f;  // cuánto avanza el fork (eje +X local)
     public int damage = 1;
 
     private ForkState state = ForkState.Idle;
@@ -18,8 +18,8 @@ public class RetractileFork : MonoBehaviour
 
     void Start()
     {
-        retractedPos = transform.localPosition;
-        extendedPos = retractedPos + new Vector3(extendDistance, 0f, 0f);
+        retractedPos = forkMesh.localPosition;
+        extendedPos  = retractedPos + Vector3.right * extendDistance;
         stateTimer = idleDuration;
     }
 
@@ -35,9 +35,8 @@ public class RetractileFork : MonoBehaviour
 
             case ForkState.Extending:
             {
-                float t = 1f - Mathf.Clamp01(stateTimer/extendDuration);
-                transform.localPosition = Vector3.Lerp(retractedPos, extendedPos, t);
-                transform.Rotate(Vector3.right * spinSpeed * Time.deltaTime, Space.Self);
+                float t = 1f - Mathf.Clamp01(stateTimer / extendDuration);
+                forkMesh.localPosition = Vector3.Lerp(retractedPos, extendedPos, t);
 
                 if (stateTimer <= 0f) EnterState(ForkState.Retracting);
                 break;
@@ -45,13 +44,12 @@ public class RetractileFork : MonoBehaviour
 
             case ForkState.Retracting:
             {
-                float t = Mathf.Clamp01(stateTimer/retractDuration);
-                transform.localPosition = Vector3.Lerp(retractedPos, extendedPos, t);
-                transform.Rotate(Vector3.right * spinSpeed * Time.deltaTime, Space.Self);
+                float t = Mathf.Clamp01(stateTimer / retractDuration);
+                forkMesh.localPosition = Vector3.Lerp(retractedPos, extendedPos, t);
 
                 if (stateTimer <= 0f)
                 {
-                    transform.localPosition = retractedPos;
+                    forkMesh.localPosition = retractedPos;
                     EnterState(ForkState.Idle);
                 }
                 break;
@@ -64,8 +62,8 @@ public class RetractileFork : MonoBehaviour
         state = newState;
         stateTimer = newState switch
         {
-            ForkState.Idle => idleDuration,
-            ForkState.Extending => extendDuration,
+            ForkState.Idle       => idleDuration,
+            ForkState.Extending  => extendDuration,
             ForkState.Retracting => retractDuration,
             _ => idleDuration,
         };
@@ -77,7 +75,8 @@ public class RetractileFork : MonoBehaviour
 
         if (other.CompareTag("Player"))
         {
-            // TODO: other.GetComponent<Player>().TakeDamage(damage);
+            PlayerHealth ph = other.GetComponent<PlayerHealth>();
+            if (ph != null) ph.TakeDamage(damage, transform.position);
         }
     }
 }

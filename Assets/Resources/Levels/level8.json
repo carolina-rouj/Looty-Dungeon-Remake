@@ -21,7 +21,7 @@
         { "col": 1, "row":  3, "rotation": 90, "type": "Plain" },
         { "col": 1, "row":  6, "rotation": 90, "type": "Plain" },
         { "col": 1, "row":  9, "rotation": 90, "type": "Plain" },
-        { "col": 2, "row": 9, "rotation": 270, "width": 1.4, "type": "Door" }
+        { "col": 2, "row": 8, "rotation": 270, "width": 1.4, "type": "Door" }
     ],
     "decorations": [
         { "type": "Cauldron",   "col": 2, "row": 7, "rotation": 0,   "yOffset": 0 },

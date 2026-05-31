@@ -21,7 +21,11 @@ public class LevelManager : MonoBehaviour
     // trampas del nivel
     public GameObject rastroSlimePrefab;
     public GameObject spiderWebsPrefab;
-    public GameObject retractileForkPrefab;
+    public GameObject forkContainerPrefab;
+    public GameObject forkMeshPrefab;
+    public GameObject arrowShootPrefab;
+    public GameObject dianaPrefab;
+    public GameObject arrowProjectilePrefab;
 
     // paredes del nivel
     public GameObject wallPlainPrefab;
@@ -83,8 +87,7 @@ public class LevelManager : MonoBehaviour
 
         trapPrefabs = new Dictionary<string, GameObject>
         {
-            { "RastroSlime",    rastroSlimePrefab    },
-            { "RetractileFork", retractileForkPrefab },
+            { "RastroSlime", rastroSlimePrefab },
         };
 
         decorationPrefabs = new Dictionary<string, GameObject>
@@ -270,13 +273,96 @@ public class LevelManager : MonoBehaviour
         if (levelData.traps == null) return;
         foreach (var spawn in levelData.traps)
         {
+            if (spawn.type == "ArrowShoot")
+            {
+                SpawnArrowTrap(spawn);
+                continue;
+            }
+            if (spawn.type == "RetractileFork")
+            {
+                SpawnRetractileFork(spawn);
+                continue;
+            }
             if (!trapPrefabs.TryGetValue(spawn.type, out GameObject prefab) || prefab == null)
             {
                 Debug.LogWarning($"[LevelManager] Prefab de trampa '{spawn.type}' no asignado.");
                 continue;
             }
-            spawnedObjects.Add(Instantiate(prefab, GridToWorld(spawn.col, spawn.row), Quaternion.identity));
+            Vector3 trapPos = GridToWorld(spawn.col, spawn.row);
+            trapPos.y = levelData.floorYOffset;
+            spawnedObjects.Add(Instantiate(prefab, trapPos, Quaternion.identity));
         }
+    }
+
+    void SpawnArrowTrap(TrapSpawn spawn)
+    {
+        if (arrowShootPrefab == null || dianaPrefab == null)
+        {
+            Debug.LogWarning("[LevelManager] arrowShootPrefab o dianaPrefab no asignados.");
+            return;
+        }
+
+        Vector3 shooterPos = GridToWorld(spawn.col, spawn.row);
+        shooterPos.y = levelData.floorYOffset + 1f;
+
+        Vector3 dianaPos = GridToWorld(spawn.dianaCol, spawn.dianaRow);
+        dianaPos.y = levelData.floorYOffset;
+
+        Vector3 dir = dianaPos - shooterPos;
+        dir.y = 0f;
+        Quaternion rot = dir != Vector3.zero ? Quaternion.FromToRotation(Vector3.right, dir) : Quaternion.identity;
+
+        GameObject shooter = Instantiate(arrowShootPrefab, shooterPos, rot);
+        GameObject diana = Instantiate(dianaPrefab, dianaPos, Quaternion.identity);
+
+        ArrowTrap trap = shooter.GetComponent<ArrowTrap>();
+        Diana dianaComp = diana.GetComponent<Diana>();
+
+        if (trap != null)
+        {
+            trap.diana = diana.transform;
+            trap.arrowPrefab = arrowProjectilePrefab;
+        }
+        if (dianaComp != null)
+            dianaComp.arrowTrap = trap;
+
+        spawnedObjects.Add(shooter);
+        spawnedObjects.Add(diana);
+    }
+
+    void SpawnRetractileFork(TrapSpawn spawn)
+    {
+        Vector3 pos = GridToWorld(spawn.col, spawn.row);
+        pos.y = 1.0f; // altura de pared (centro del tile de pared)
+
+        GameObject root = new GameObject("RetractileFork");
+        root.transform.position = pos;
+        root.transform.rotation = Quaternion.Euler(0f, spawn.rotation, 0f);
+
+        if (forkContainerPrefab != null)
+        {
+            GameObject container = Instantiate(forkContainerPrefab, root.transform);
+            container.transform.localPosition = Vector3.zero;
+            container.transform.localRotation = Quaternion.Euler(0f, 90f, 0f);
+        }
+
+        GameObject forkObj = null;
+        if (forkMeshPrefab != null)
+        {
+            forkObj = Instantiate(forkMeshPrefab, root.transform);
+            forkObj.transform.localPosition = new Vector3(0.3f, -0.8f, 0f); // dentro del contenedor
+            forkObj.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+        }
+
+        RetractileFork script = root.AddComponent<RetractileFork>();
+        if (forkObj != null) script.forkMesh = forkObj.transform;
+
+        BoxCollider col = root.AddComponent<BoxCollider>();
+        col.isTrigger = true;
+        col.size   = new Vector3(0.8f, 0.5f, 0.5f); // orientado en X (dirección del pinchazo)
+        col.center = new Vector3(0.4f, 0f, 0f);      // delante del contenedor
+
+        spawnedObjects.Add(root);
     }
 
     void SpawnDecorations()

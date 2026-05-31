@@ -9,19 +9,21 @@
         "#####",
         "#####",
         "#####",
-        "#####",
+        "####.",
         "#####",
         "#####"
     ],
     "enemies": [
         { "type": "Slime", "col": 3, "row": 3 }
     ],
-    "traps": [],
+    "traps": [
+        { "type": "ArrowShoot", "col": 0, "row": 7, "dianaCol": 4, "dianaRow": 7 }
+    ],
     "walls": [
         { "col": 1, "row":  3, "rotation": 90, "type": "Plain" },
         { "col": 1, "row":  6, "rotation": 90, "type": "Plain" },
         { "col": 1, "row":  9, "rotation": 90, "type": "Plain" },
-        { "col": 2, "row": 9, "rotation": 270, "width": 1.4, "type": "Door" }
+        { "col": 2, "row": 8, "rotation": 270, "width": 1.4, "type": "Door" }
     ],
     "decorations": [
         { "type": "Barrel",     "col": 2, "row": 3,  "rotation": 0,   "yOffset": 0 },
