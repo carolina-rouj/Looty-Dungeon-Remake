@@ -4,11 +4,6 @@ A 3D dungeon-crawler built in Unity for the **VJ (Videojocs)** course.
 
 The project is an original take on **Looty Dungeon** (Tinytouchtales, 2016), a grid-based isometric rogue-lite for mobile. It keeps the original's core feel — direct cell-by-cell movement and constant pressure from a collapsing floor — while building it as a full 3D, voxel-styled experience.
 
-## Authors
-
-- Carolina Rodriguez Ujano
-- Mateus Grandolfi Albuquerque
-
 ## Gameplay Overview
 
 The player advances through a dungeon of **10 rooms** of increasing difficulty. Each room has an objective — defeat all enemies, or collect a target number of coins (rooms 3, 6 and 9) — that must be completed to open the door to the next room. The run is **won** by defeating the boss in the final room, and **lost** if the player runs out of hearts; in both cases the game can be restarted from room 1.
