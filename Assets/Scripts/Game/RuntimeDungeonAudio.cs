@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Audio 100% procedural (sin ficheros): sintetiza efectos y musica en runtime al estilo
-// chiptune/arcade del Looty Dungeon original (ondas cuadrada/triangular + ruido, con
-// envolventes y arpegios) en vez de simples pitidos sinusoidales.
 public class RuntimeDungeonAudio : MonoBehaviour
 {
     private const int SampleRate = 44100;
@@ -30,38 +27,22 @@ public class RuntimeDungeonAudio : MonoBehaviour
 
         clips = new Dictionary<RuntimeSfx, AudioClip>
         {
-            // Golpe de espada: barrido de ruido descendente (whoosh).
             { RuntimeSfx.Attack, Sweep("Attack", 1400f, 380f, 0.12f, 0.4f, Wave.Noise) },
-            // Impacto en enemigo: golpe seco (ruido corto + tono grave).
             { RuntimeSfx.Hit, Thud("Hit", 0.13f, 0.6f) },
-            // Moneda: arpegio brillante ascendente (el clasico "bling").
             { RuntimeSfx.Coin, Arp("Coin", new[] { 988f, 1319f }, 0.07f, 0.42f, Wave.Square) },
-            // Puerta abierta: acorde ascendente suave.
             { RuntimeSfx.Door, Arp("Door", new[] { 392f, 523f, 784f }, 0.1f, 0.4f, Wave.Triangle) },
-            // Daño al jugador: zumbido grave y aspero.
             { RuntimeSfx.PlayerDamage, Buzz("Damage", 150f, 0.22f, 0.55f) },
-            // Hechizo: tono cristalino con vibrato.
             { RuntimeSfx.Cast, Sweep("Cast", 660f, 990f, 0.18f, 0.32f, Wave.Square) },
-            // Trampa: chasquido metalico.
             { RuntimeSfx.Trap, Thud("Trap", 0.08f, 0.45f) },
-            // Slime: barrido de ruido descendente (chapoteo/squelch humedo).
             { RuntimeSfx.Slime, Arp("Slime", new[] { 150f, 260f, 200f, 320f, 180f }, 0.06f, 0.45f, Wave.Triangle) },
-            // Suelo que cae: retumbo grave.
             { RuntimeSfx.FloorFall, Buzz("FloorFall", 70f, 0.4f, 0.5f) },
-            // Game over: arpegio descendente triste.
             { RuntimeSfx.GameOver, Arp("GameOver", new[] { 523f, 415f, 330f, 247f }, 0.16f, 0.5f, Wave.Triangle) },
-            // Victoria: fanfarria ascendente.
             { RuntimeSfx.Victory, Arp("Victory", new[] { 523f, 659f, 784f, 1047f }, 0.14f, 0.45f, Wave.Square) },
-            // Muerte de enemigo: "poof" descendente (vale tanto si lo mata el jugador como
-            // si cae al vacio).
             { RuntimeSfx.EnemyDeath, Sweep("EnemyDeath", 540f, 120f, 0.22f, 0.5f, Wave.Square) },
-            // Trampa de flecha al disparar: silbido agudo y rapido.
             { RuntimeSfx.ArrowShoot, Sweep("ArrowShoot", 1350f, 560f, 0.1f, 0.34f, Wave.Noise) },
-            // Pinchos del suelo al subir: estocada metalica ascendente.
             { RuntimeSfx.Spikes, Sweep("Spikes", 480f, 1150f, 0.09f, 0.4f, Wave.Square) }
         };
 
-        // Bucles musicales (melodia chiptune + bajo).
         menuLoop = MusicLoop("MenuLoop", new[] { 0, 4, 7, 4, 5, 9, 7, 4 }, 220f, 0.42f, 0.13f, Wave.Triangle, false);
         gameLoop = MusicLoop("GameLoop", new[] { 0, 3, 7, 10, 7, 3, 5, 2 }, 196f, 0.34f, 0.14f, Wave.Square, false);
         bossLoop = MusicLoop("BossLoop", new[] { 0, -1, 0, 3, 5, 3, 0, -2 }, 130f, 0.34f, 0.17f, Wave.Saw, true);

@@ -6,8 +6,6 @@ public class CoinPickup : MonoBehaviour
     private Transform floorTile;   // tile del suelo al que va pegada
     private float baseLocalY;      // altura local de reposo (para el balanceo)
 
-    // Crea una moneda apoyada sobre la superficie real del tile y colgada de el, de modo
-    // que cae junto al suelo cuando este se desploma.
     public static void Create(Transform floorTile)
     {
         GameObject coin = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -48,7 +46,6 @@ public class CoinPickup : MonoBehaviour
             return;
         }
 
-        // Balanceo suave sobre la superficie.
         Vector3 lp = transform.localPosition;
         lp.y = baseLocalY + Mathf.Sin(Time.time * 4f) * 0.05f;
         transform.localPosition = lp;

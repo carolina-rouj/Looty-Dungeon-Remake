@@ -5,15 +5,15 @@ namespace YourNamespace
     [ExecuteAlways]
     public class VFX_FireController : MonoBehaviour
     {
-        [Header("Réglages VFX Feu")]
+        [Header("VFX Feu")]
         [SerializeField] private Color fireColor = Color.red;
         [SerializeField, Range(0f, 2f)] private float fireIntensity = 1f;
         [SerializeField] private Vector3 fireWindDirection = Vector3.zero;
 
         private ParticleSystem[] fireParticleSystems;
-        private float[] defaultFireRateValues;        // Valeurs par défaut du spawn rate (Emission)
-        private float[] defaultFireStartSizeValues;     // Valeurs par défaut de la taille (Main > startSize)
-        private Light fireLight; // Adding reference to Light component for intensity control
+        private float[] defaultFireRateValues;
+        private float[] defaultFireStartSizeValues;
+        private Light fireLight;
 
         private void Awake()
         {
@@ -23,8 +23,6 @@ namespace YourNamespace
 
         private void OnValidate()
         {
-            // En mode éditeur, il se peut qu'Awake() ne soit pas appelé,
-            // donc on s'assure que les tableaux sont initialisés.
             if (fireParticleSystems == null || fireParticleSystems.Length == 0 ||
                 defaultFireRateValues == null || defaultFireStartSizeValues == null ||
                 defaultFireRateValues.Length != fireParticleSystems.Length ||
@@ -35,10 +33,6 @@ namespace YourNamespace
             ApplyFireSettings();
         }
 
-        /// <summary>
-        /// Recherche tous les ParticleSystem enfants et sauvegarde leurs valeurs par défaut.
-        /// Le spawn rate est dans le module Emission et la taille dans le module Main (startSize).
-        /// </summary>
         private void FindFireParticles()
         {
             fireParticleSystems = GetComponentsInChildren<ParticleSystem>();
@@ -58,16 +52,11 @@ namespace YourNamespace
                 }
             }
 
-            fireLight = GetComponentInChildren<Light>(); // Retrieve the Light component if present
+            fireLight = GetComponentInChildren<Light>();
         }
 
-        /// <summary>
-        /// Applique les réglages sur chaque ParticleSystem enfant.
-        /// Les valeurs par défaut sont multipliées par fireIntensity, exactement comme pour le spawn rate.
-        /// </summary>
         private void ApplyFireSettings()
         {
-            // S'assurer que tous les tableaux sont initialisés correctement.
             if (fireParticleSystems == null || fireParticleSystems.Length == 0 ||
                 defaultFireRateValues == null || defaultFireStartSizeValues == null ||
                 defaultFireRateValues.Length != fireParticleSystems.Length ||
@@ -86,10 +75,8 @@ namespace YourNamespace
                 var emissionModule = ps.emission;
                 var velocityModule = ps.velocityOverLifetime;
 
-                // Appliquer la couleur
                 mainModule.startColor = fireColor;
 
-                // Modifier le spawn rate en multipliant la valeur par défaut par fireIntensity
                 float baseRate = defaultFireRateValues[i];
                 if (emissionModule.rateOverTime.mode == ParticleSystemCurveMode.Constant)
                 {
@@ -100,11 +87,9 @@ namespace YourNamespace
                     emissionModule.rateOverTime = new ParticleSystem.MinMaxCurve(baseRate * fireIntensity, baseRate * fireIntensity);
                 }
 
-                // Modifier la taille des particules de la même manière
                 float baseSize = defaultFireStartSizeValues[i];
                 mainModule.startSize = new ParticleSystem.MinMaxCurve(baseSize * fireIntensity);
 
-                // Appliquer la direction du vent si le module Velocity over Lifetime est activé
                 if (velocityModule.enabled)
                 {
                     velocityModule.xMultiplier = fireWindDirection.x;
@@ -113,7 +98,6 @@ namespace YourNamespace
                 }
             }
 
-            // Apply fire light intensity based on fire intensity
             if (fireLight != null)
             {
                 fireLight.intensity = fireIntensity;

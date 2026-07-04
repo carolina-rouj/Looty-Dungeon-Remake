@@ -46,8 +46,6 @@ public class Wizard : MonoBehaviour
         }
     }
 
-    // --- Daño y muerte ---
-
     public void Hurt() => Die();
 
     private void Die()
@@ -57,8 +55,6 @@ public class Wizard : MonoBehaviour
         ani.SetTrigger("die");
         Destroy(gameObject, 1.0f);
     }
-
-    // --- Movimiento ---
 
     void SelectDirection()
     {

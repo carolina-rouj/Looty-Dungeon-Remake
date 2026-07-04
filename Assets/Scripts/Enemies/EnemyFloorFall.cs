@@ -1,9 +1,5 @@
 using UnityEngine;
 
-// Glue de Mateus: hace que un enemigo se caiga cuando el suelo bajo el (capa "Floor")
-// desaparece, p.ej. en los niveles donde el suelo cae por filas. Desactiva la IA del
-// enemigo para que no pelee con la fisica, le anade un Rigidbody y lo destruye. Es
-// aditivo: no toca los scripts de enemigo de Carolina.
 public class EnemyFloorFall : MonoBehaviour
 {
     private static readonly Collider[] probe = new Collider[4];
@@ -47,11 +43,13 @@ public class EnemyFloorFall : MonoBehaviour
     private void StartFalling()
     {
         falling = true;
+        if (DungeonGameRuntime.Instance != null)
+        {
+            DungeonGameRuntime.Instance.NotifyEnemyDefeated(gameObject);
+        }
         foreach (MonoBehaviour behaviour in GetComponents<MonoBehaviour>())
         {
             if (behaviour == this) continue;
-            // StopAllCoroutines para que un salto en curso no pelee con el Rigidbody.
-            // enabled=false solo detiene Update, las corutinas siguen si no se paran.
             behaviour.StopAllCoroutines();
             behaviour.enabled = false;
         }
@@ -59,7 +57,9 @@ public class EnemyFloorFall : MonoBehaviour
         {
             col.enabled = false;
         }
-        Rigidbody body = gameObject.AddComponent<Rigidbody>();
+        Rigidbody body = GetComponent<Rigidbody>();
+        if (body == null) body = gameObject.AddComponent<Rigidbody>();
+        body.isKinematic = false;
         body.useGravity = true;
         Destroy(gameObject, 2f);
     }

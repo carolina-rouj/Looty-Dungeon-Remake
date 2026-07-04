@@ -1,8 +1,6 @@
 using System.Collections;
 using UnityEngine;
 
-// Componente aditivo sobre Wizard.cs: dispara orbes magicos verdes cuando el jugador
-// entra en rango. No modifica Wizard.cs ni su movimiento tile-based.
 public class WizardCombat : MonoBehaviour
 {
     public float shootRange    = 5.5f;
@@ -21,7 +19,6 @@ public class WizardCombat : MonoBehaviour
         GameObject p = GameObject.FindWithTag("Player");
         if (p != null) player = p.transform;
 
-        // La varita se crea en EnemyVisualBuilder.BuildWizard bajo "RuntimeEnemyVisual/Wizard Orb"
         staffOrb = transform.Find("RuntimeEnemyVisual/Wizard Orb");
 
         nextShootTime = Time.time + 1.5f;
@@ -54,7 +51,7 @@ public class WizardCombat : MonoBehaviour
             ? staffOrb.position
             : transform.position + Vector3.up * 1.5f + transform.forward * 0.5f;
 
-        // Telegrafia: burst verde en la varita
+        // burst verde en la varita
         if (DungeonGameRuntime.Instance != null)
             DungeonGameRuntime.Instance.PlayEnemyCast(spawnPos, orbColor);
 
